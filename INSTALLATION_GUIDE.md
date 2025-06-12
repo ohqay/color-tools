@@ -1,4 +1,4 @@
-# Color Converter MCP Server - Installation & Testing Guide
+# Color Tools - Installation & Testing Guide
 
 ## Quick Start
 
@@ -33,14 +33,14 @@ Edit: `claude_desktop_config.json`
 %APPDATA%\Claude\claude_desktop_config.json
 ```
 
-### 2. Add Color Converter MCP Server
+### 2. Add Color Tools MCP Server
 
 Add this to your `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "color-converter": {
+    "colour-tools": {
       "command": "node",
       "args": ["/Users/tarek/development/creating-mcp/color-converter-mcp/dist/index.js"]
     }

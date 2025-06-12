@@ -1,11 +1,11 @@
 {
-  "name": "color-converter-mcp",
+  "name": "colour-tools",
   "version": "1.0.0",
-  "description": "MCP server for converting colors between different formats (hex, RGB, HSL, HSB/HSV, CMYK)",
+  "description": "Color Tools - A comprehensive MCP server for color conversion, accessibility, and manipulation",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "color-converter-mcp": "dist/index.js"
+    "colour-tools": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

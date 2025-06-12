@@ -126,7 +126,7 @@ const loadResourceData = async () => {
 // Create server instance
 const server = new Server(
   {
-    name: 'color-converter-mcp',
+    name: 'colour-tools',
     version: VERSION,
   },
   {

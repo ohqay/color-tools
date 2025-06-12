@@ -1,4 +1,4 @@
-# Color Converter MCP Server
+# Color Tools
 
 ```
 ██████╗  ██████╗ ██╗      ██████╗ ██╗   ██╗██████╗ 
@@ -51,8 +51,8 @@ A Model Context Protocol (MCP) server that provides color conversion capabilitie
 
 1. Clone this repository:
 ```bash
-git clone [repository-url]
-cd color-converter-mcp
+git clone https://github.com/ohqay/colour-tools.git
+cd colour-tools
 ```
 
 2. Install dependencies:
@@ -89,15 +89,15 @@ Add the following to your Claude Desktop configuration file:
 ```json
 {
   "mcpServers": {
-    "color-converter": {
+    "colour-tools": {
       "command": "node",
-      "args": ["/path/to/color-converter-mcp/dist/index.js"]
+      "args": ["/path/to/colour-tools/dist/index.js"]
     }
   }
 }
 ```
 
-Replace `/path/to/color-converter-mcp` with the actual path to your installation.
+Replace `/path/to/colour-tools` with the actual path to your installation.
 
 ### Using the Tools
 
@@ -394,7 +394,7 @@ Show me all CSS named colors
 ### Project Structure
 
 ```
-color-converter-mcp/
+colour-tools/
 ├── src/
 │   ├── index.ts           # MCP server implementation
 │   ├── colorConverter.ts  # Color conversion algorithms
