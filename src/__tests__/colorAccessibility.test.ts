@@ -7,7 +7,7 @@ import {
   getContrastReport,
   suggestAccessiblePairs
 } from '../colorAccessibility';
-import { RGB } from '../types';
+import type { RGB } from '../types';
 
 describe('Color Accessibility', () => {
   describe('calculateRelativeLuminance', () => {

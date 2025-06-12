@@ -42,6 +42,6 @@ console.log('   3-digit hex: #F00');
 const result6 = ColorConverter.convert('#F00');
 console.log('   - Hex:', result6.hex, '(remains 6-digit)');
 console.log('   - RGB:', result6.rgb);
-console.log('   - RGBA:', result6.rgba || 'undefined (no alpha)');
+console.log('   - RGBA:', result6.rgba ?? 'undefined (no alpha)');
 
 console.log('\n' + '='.repeat(50));

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { ColorConverter } from '../colorConverter.js';
-import { RGB, RGBA, HSL, HSLA, HSB, CMYK } from '../types.js';
 
 describe('ColorConverter', () => {
   describe('detectFormat', () => {

@@ -809,7 +809,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       'convert-tailwind-color': 'Please provide a valid input for the specified operation. For to-hex/get-color: use "blue-500" or "blue". For from-hex: use "#3b82f6". For search: use color name like "blue". For get-all-shades: use color name like "blue".',
     };
     
-    return createErrorResponse(error, errorHints[name] || 'Please check your input parameters');
+    return createErrorResponse(error, errorHints[name] ?? 'Please check your input parameters');
   }
 });
 

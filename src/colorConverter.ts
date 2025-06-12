@@ -505,7 +505,7 @@ export class ColorConverter {
   // Parse RGB string - optimized
   static parseRGBString(input: string): RGB | null {
     // Pre-compiled regex patterns for better performance
-    const rgbMatch = input.match(/rgb\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/i) ||
+    const rgbMatch = input.match(/rgb\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/i) ??
                      input.match(/^(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)$/);
     
     if (!rgbMatch) {return null;}

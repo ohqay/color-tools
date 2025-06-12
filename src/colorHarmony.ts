@@ -1,5 +1,4 @@
-import type { HSL, ColorFormat} from './types.js';
-import { RGB, ConversionResult } from './types.js';
+import type { HSL, ColorFormat } from './types.js';
 import { ColorConverter } from './colorConverter.js';
 
 export type HarmonyType = 

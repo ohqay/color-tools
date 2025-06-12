@@ -1,10 +1,4 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  ListResourcesRequestSchema,
-  ReadResourceRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
 
 // Mock the file system module to avoid reading package.json
 vi.mock('fs', () => ({

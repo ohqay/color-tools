@@ -5,7 +5,6 @@ import { ColorConverter } from '../colorConverter.js';
 import { ColorHarmony } from '../colorHarmony.js';
 
 // Mock ColorConverter.parseToRGB to return null in specific cases
-const originalParseToRGB = ColorConverter.parseToRGB;
 
 describe('Edge Cases for 100% Coverage', () => {
   describe('Color Accessibility Edge Cases', () => {

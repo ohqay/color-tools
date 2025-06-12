@@ -16,13 +16,13 @@ vi.mock('path', () => ({
 }));
 
 // Create a mock server that captures handler functions
-let mockListToolsHandler: Function;
-let mockCallToolHandler: Function;
-let mockListResourcesHandler: Function;
-let mockReadResourceHandler: Function;
+let mockListToolsHandler: () => unknown;
+let mockCallToolHandler: (request: any) => unknown;
+let mockListResourcesHandler: () => unknown;
+let mockReadResourceHandler: (request: any) => unknown;
 
 const mockServer = {
-  setRequestHandler: vi.fn((schema: any, handler: Function) => {
+  setRequestHandler: vi.fn((schema: any, handler: (...args: any[]) => unknown) => {
     // Store handlers for testing
     const schemaName = schema?.name ?? schema;
     if (schemaName?.includes?.('ListTools') || schema === 'list-tools') {

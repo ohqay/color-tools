@@ -139,7 +139,7 @@ describe('NAMED_COLORS', () => {
 
   describe('Color format validation', () => {
     it('should have all regular colors in valid hex format', () => {
-      Object.entries(NAMED_COLORS).forEach(([name, value]) => {
+      Object.entries(NAMED_COLORS).forEach(([_name, value]) => {
         if (value !== 'transparent' && value !== 'currentcolor') {
           expect(value).toMatch(/^#[0-9a-f]{6}$/i);
         }
@@ -147,7 +147,7 @@ describe('NAMED_COLORS', () => {
     });
 
     it('should have lowercase hex values', () => {
-      Object.entries(NAMED_COLORS).forEach(([name, value]) => {
+      Object.entries(NAMED_COLORS).forEach(([_name, value]) => {
         if (value !== 'transparent' && value !== 'currentcolor') {
           expect(value).toBe(value.toLowerCase());
         }

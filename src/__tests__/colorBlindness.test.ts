@@ -5,10 +5,10 @@ import {
   areColorsDistinguishable,
   findColorBlindSafeAlternative,
   generateColorBlindSafePalette,
-  ColorBlindnessType,
-  colorBlindnessInfo
+  colorBlindnessInfo,
+  type ColorBlindnessType
 } from '../colorBlindness';
-import { RGB } from '../types';
+import type { RGB } from '../types';
 
 describe('Color Blindness Simulation', () => {
   describe('simulateColorBlindness', () => {

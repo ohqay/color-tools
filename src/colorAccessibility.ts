@@ -278,7 +278,6 @@ export function suggestAccessiblePairs(baseColor: string | RGB, count = 5): {
 
   // Generate variations
   const lightnessVariations = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95];
-  const baseLuminance = calculateRelativeLuminance(baseRgb);
 
   for (const l1 of lightnessVariations) {
     for (const l2 of lightnessVariations) {

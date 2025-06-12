@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { ColorHarmony } from '../colorHarmony.js';
 
 // Mock the MCP server handler

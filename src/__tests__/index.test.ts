@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ColorConverter } from '../colorConverter.js';
-import { ColorFormat } from '../types.js';
+import type { ColorFormat } from '../types.js';
 
 // Mock the file system module to avoid reading package.json
 vi.mock('fs', () => ({

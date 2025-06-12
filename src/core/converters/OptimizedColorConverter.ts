@@ -6,7 +6,7 @@ import type { RGB, RGBA, HSL, HSLA, HSB, CMYK, LAB, XYZ, ColorFormat, Conversion
 import { NAMED_COLORS_MAP_INTERNAL } from '../../namedColors.js';
 import { conversionCache } from '../cache/AdvancedCache.js';
 import { performanceMonitor, measureTime } from '../monitoring/PerformanceMonitor.js';
-import { ColorError, ColorErrorFactory, safeExecute } from '../errors/ColorError.js';
+import { ColorErrorFactory, safeExecute } from '../errors/ColorError.js';
 import { OptimizedMath, COLOR_MATRICES, D65_WHITE, COMMON_COLORS } from '../math/OptimizedMath.js';
 
 // Input parsing and validation
@@ -133,7 +133,7 @@ class InputParser {
   }
 
   private static parseRGB(rgb: string): RGB {
-    const match = rgb.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i) ||
+    const match = rgb.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i) ??
                   rgb.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
     
     if (!match) {
@@ -591,7 +591,7 @@ export class OptimizedColorConverter {
   private static performConversion(input: string, from?: ColorFormat, to?: ColorFormat[]): ConversionResult {
     // Create cache key
     const targetFormatsKey = to === undefined ? 'all' : to.join(',');
-    const cacheKey = `${input}|${from || 'auto'}|${targetFormatsKey}`;
+    const cacheKey = `${input}|${from ?? 'auto'}|${targetFormatsKey}`;
     
     // Check cache first
     const cached = conversionCache.get(cacheKey);
@@ -611,9 +611,7 @@ export class OptimizedColorConverter {
     const alpha = hasAlpha ? (rgbOrRgba as RGBA).a : undefined;
 
     // Determine target formats
-    const targetFormats = to === undefined 
-      ? ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk', 'lab', 'xyz'] as ColorFormat[]
-      : to;
+    const targetFormats = to ?? ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk', 'lab', 'xyz'] as ColorFormat[];
 
     // Perform conversions
     const result = this.convertToFormats(rgb, alpha, targetFormats);
@@ -649,11 +647,12 @@ export class OptimizedColorConverter {
           }
           break;
 
-        case 'hsl':
+        case 'hsl': {
           const hsl = ColorSpaceConverter.rgbToHSL(rgb);
           result.hsl = OutputFormatter.formatHSL(hsl);
           result.rawValues!.hsl = hsl;
           break;
+        }
 
         case 'hsla':
           if (alpha !== undefined) {
@@ -665,30 +664,34 @@ export class OptimizedColorConverter {
           break;
 
         case 'hsb':
-        case 'hsv':
+        case 'hsv': {
           const hsb = ColorSpaceConverter.rgbToHSB(rgb);
           result.hsb = OutputFormatter.formatHSB(hsb);
           result.hsv = result.hsb;
           result.rawValues!.hsb = hsb;
           break;
+        }
 
-        case 'cmyk':
+        case 'cmyk': {
           const cmyk = ColorSpaceConverter.rgbToCMYK(rgb);
           result.cmyk = OutputFormatter.formatCMYK(cmyk);
           result.rawValues!.cmyk = cmyk;
           break;
+        }
 
-        case 'lab':
+        case 'lab': {
           const lab = ColorSpaceConverter.rgbToLAB(rgb);
           result.lab = OutputFormatter.formatLAB(lab);
           result.rawValues!.lab = lab;
           break;
+        }
 
-        case 'xyz':
+        case 'xyz': {
           const xyz = ColorSpaceConverter.rgbToXYZ(rgb);
           result.xyz = OutputFormatter.formatXYZ(xyz);
           result.rawValues!.xyz = xyz;
           break;
+        }
       }
     }
 
