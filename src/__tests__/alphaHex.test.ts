@@ -134,7 +134,7 @@ describe('Alpha Hex Format Support', () => {
       for (const test of testCases) {
         const result = ColorConverter.hexToRGB(test.hex);
         expect(result).toBeDefined();
-        expect('a' in result!).toBe(true);
+        expect('a' in (result as any)).toBe(true);
         expect((result as any).a).toBeCloseTo(test.expectedAlpha, 5);
       }
     });

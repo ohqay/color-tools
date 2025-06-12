@@ -105,8 +105,8 @@ describe('Color Accessibility', () => {
     test('should return original color if already accessible', () => {
       const result = findAccessibleColor('#000000', '#FFFFFF');
       expect(result).not.toBeNull();
-      expect(result!.hex).toBe('#000000');
-      expect(result!.contrast).toBeCloseTo(21, 1);
+      expect((result as any).hex).toBe('#000000');
+      expect((result as any).contrast).toBeCloseTo(21, 1);
     });
 
     test('should find darker alternative for light background', () => {
@@ -114,9 +114,9 @@ describe('Color Accessibility', () => {
         targetContrast: 4.5
       });
       expect(result).not.toBeNull();
-      expect(result!.contrast).toBeGreaterThanOrEqual(4.5);
+      expect((result as any).contrast).toBeGreaterThanOrEqual(4.5);
       // Should be darker than original
-      expect(result!.color.r).toBeLessThanOrEqual(204);
+      expect((result as any).color.r).toBeLessThanOrEqual(204);
     });
 
     test('should find lighter alternative for dark background', () => {
@@ -124,9 +124,9 @@ describe('Color Accessibility', () => {
         targetContrast: 4.5
       });
       expect(result).not.toBeNull();
-      expect(result!.contrast).toBeGreaterThanOrEqual(4.5);
+      expect((result as any).contrast).toBeGreaterThanOrEqual(4.5);
       // Should be lighter than original
-      expect(result!.color.r).toBeGreaterThanOrEqual(51);
+      expect((result as any).color.r).toBeGreaterThanOrEqual(51);
     });
 
     test('should maintain hue when requested', () => {
@@ -136,7 +136,7 @@ describe('Color Accessibility', () => {
         targetContrast: 4.5
       });
       expect(result).not.toBeNull();
-      expect(result!.contrast).toBeGreaterThanOrEqual(4.5);
+      expect((result as any).contrast).toBeGreaterThanOrEqual(4.5);
     });
 
     test('should find black/white when maintainHue is false', () => {
@@ -147,8 +147,8 @@ describe('Color Accessibility', () => {
       expect(result).not.toBeNull();
       // Should be either black or white
       const isBlackOrWhite = 
-        (result!.hex === '#000000') || 
-        (result!.hex === '#FFFFFF');
+        ((result as any).hex === '#000000') || 
+        ((result as any).hex === '#FFFFFF');
       expect(isBlackOrWhite).toBe(true);
     });
 
@@ -159,7 +159,7 @@ describe('Color Accessibility', () => {
       });
       expect(result).not.toBeNull();
       // Should be darker than original
-      expect(result!.color.r).toBeLessThanOrEqual(136);
+      expect((result as any).color.r).toBeLessThanOrEqual(136);
     });
 
     test('should use black vs white comparison when maintainHue is false', () => {
@@ -171,7 +171,7 @@ describe('Color Accessibility', () => {
       });
       expect(result).not.toBeNull();
       // The function should try black or white and return one that works
-      expect(result!.contrast).toBeGreaterThan(0);
+      expect((result as any).contrast).toBeGreaterThan(0);
     });
 
     test('should return best color when maintainHue cannot find perfect match', () => {
@@ -182,7 +182,7 @@ describe('Color Accessibility', () => {
       });
       expect(result).not.toBeNull();
       // Should return the best color found (probably black or white hue-adjusted)
-      expect(result!.contrast).toBeGreaterThan(0);
+      expect((result as any).contrast).toBeGreaterThan(0);
     });
   });
 

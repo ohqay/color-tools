@@ -155,33 +155,38 @@ export class ColorConverter {
         return this.parseRGBString(trimmed);
       case 'rgba':
         return this.parseRGBAString(trimmed);
-      case 'hsl':
+      case 'hsl': {
         const hsl = this.parseHSLString(trimmed);
-        if (!hsl) throw new Error('Invalid HSL format');
+        if (!hsl) {throw new Error('Invalid HSL format');}
         return this.hslToRGB(hsl);
+      }
       case 'hsla': {
         const hsla = this.parseHSLAString(trimmed);
-        if (!hsla) throw new Error('Invalid HSLA format');
+        if (!hsla) {throw new Error('Invalid HSLA format');}
         const rgb = this.hslToRGB(hsla);
         return { ...rgb, a: hsla.a } as RGBA;
       }
       case 'hsb':
-      case 'hsv':
+      case 'hsv': {
         const hsb = this.parseHSBString(trimmed);
-        if (!hsb) throw new Error('Invalid HSB format');
+        if (!hsb) {throw new Error('Invalid HSB format');}
         return this.hsbToRGB(hsb);
-      case 'cmyk':
+      }
+      case 'cmyk': {
         const cmyk = this.parseCMYKString(trimmed);
-        if (!cmyk) throw new Error('Invalid CMYK format');
+        if (!cmyk) {throw new Error('Invalid CMYK format');}
         return this.cmykToRGB(cmyk);
-      case 'lab':
+      }
+      case 'lab': {
         const lab = this.parseLABString(trimmed);
-        if (!lab) throw new Error('Invalid LAB format');
+        if (!lab) {throw new Error('Invalid LAB format');}
         return this.labToRGB(lab);
-      case 'xyz':
+      }
+      case 'xyz': {
         const xyz = this.parseXYZString(trimmed);
-        if (!xyz) throw new Error('Invalid XYZ format');
+        if (!xyz) {throw new Error('Invalid XYZ format');}
         return this.xyzToRGB(xyz);
+      }
       default:
         return null;
     }
@@ -753,13 +758,13 @@ export class ColorConverter {
           if (alpha !== undefined) {
             const rgba: RGBA = { ...rgb, a: alpha };
             result.rgba = this.formatRGBA(rgba);
-            if (result.rawValues) result.rawValues.rgba = rgba;
+            if (result.rawValues) {result.rawValues.rgba = rgba;}
           }
           break;
         case 'hsl': {
           const hsl = this.rgbToHSL(rgb);
           result.hsl = this.formatHSL(hsl);
-          if (result.rawValues) result.rawValues.hsl = hsl;
+          if (result.rawValues) {result.rawValues.hsl = hsl;}
           break;
         }
         case 'hsla':
@@ -767,7 +772,7 @@ export class ColorConverter {
             const hsl = this.rgbToHSL(rgb);
             const hsla: HSLA = { ...hsl, a: alpha };
             result.hsla = this.formatHSLA(hsla);
-            if (result.rawValues) result.rawValues.hsla = hsla;
+            if (result.rawValues) {result.rawValues.hsla = hsla;}
           }
           break;
         case 'hsb':
@@ -775,25 +780,25 @@ export class ColorConverter {
           const hsb = this.rgbToHSB(rgb);
           result.hsb = this.formatHSB(hsb);
           result.hsv = result.hsb; // HSB and HSV are the same
-          if (result.rawValues) result.rawValues.hsb = hsb;
+          if (result.rawValues) {result.rawValues.hsb = hsb;}
           break;
         }
         case 'cmyk': {
           const cmyk = this.rgbToCMYK(rgb);
           result.cmyk = this.formatCMYK(cmyk);
-          if (result.rawValues) result.rawValues.cmyk = cmyk;
+          if (result.rawValues) {result.rawValues.cmyk = cmyk;}
           break;
         }
         case 'lab': {
           const lab = this.rgbToLAB(rgb);
           result.lab = this.formatLAB(lab);
-          if (result.rawValues) result.rawValues.lab = lab;
+          if (result.rawValues) {result.rawValues.lab = lab;}
           break;
         }
         case 'xyz': {
           const xyz = this.rgbToXYZ(rgb);
           result.xyz = this.formatXYZ(xyz);
-          if (result.rawValues) result.rawValues.xyz = xyz;
+          if (result.rawValues) {result.rawValues.xyz = xyz;}
           break;
         }
       }

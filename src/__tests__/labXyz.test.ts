@@ -280,17 +280,17 @@ describe('LAB and XYZ Color Space Support', () => {
     it('should parse LAB input to RGB', () => {
       const rgb = ColorConverter.parseToRGB('lab(53.24%, 80.09, 67.2)');
       expect(rgb).toBeDefined();
-      expect(rgb!.r).toBeCloseTo(255, 0);
-      expect(rgb!.g).toBeCloseTo(0, 0);
-      expect(rgb!.b).toBeCloseTo(0, 0);
+      expect((rgb as any).r).toBeCloseTo(255, 0);
+      expect((rgb as any).g).toBeCloseTo(0, 0);
+      expect((rgb as any).b).toBeCloseTo(0, 0);
     });
 
     it('should parse XYZ input to RGB', () => {
       const rgb = ColorConverter.parseToRGB('xyz(41.246, 21.267, 1.933)');
       expect(rgb).toBeDefined();
-      expect(rgb!.r).toBeCloseTo(255, 0);
-      expect(rgb!.g).toBeCloseTo(0, 0);
-      expect(rgb!.b).toBeCloseTo(0, 0);
+      expect((rgb as any).r).toBeCloseTo(255, 0);
+      expect((rgb as any).g).toBeCloseTo(0, 0);
+      expect((rgb as any).b).toBeCloseTo(0, 0);
     });
   });
 });

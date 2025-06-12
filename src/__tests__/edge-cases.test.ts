@@ -19,7 +19,7 @@ describe('Edge Cases for 100% Coverage', () => {
       
       // Should return a result (either black, white, or the best alternative found)
       expect(result).not.toBeNull();
-      expect(result!.hex).toBeDefined();
+      expect((result as any).hex).toBeDefined();
     });
 
     it('should test all branches in black vs white selection', () => {

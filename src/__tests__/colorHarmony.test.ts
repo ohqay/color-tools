@@ -100,8 +100,8 @@ describe('ColorHarmony', () => {
       
       expect(result.colors).toHaveLength(3);
       // Colors should be closer together with smaller angle
-      const hsl1 = ColorConverter.rgbToHSL(ColorConverter.hexToRGB(result.colors[0])!);
-      const hsl2 = ColorConverter.rgbToHSL(ColorConverter.hexToRGB(result.colors[1])!);
+      const hsl1 = ColorConverter.rgbToHSL(ColorConverter.hexToRGB(result.colors[0]) as any);
+      const hsl2 = ColorConverter.rgbToHSL(ColorConverter.hexToRGB(result.colors[1]) as any);
       const hueDiff = Math.abs(hsl1.h - hsl2.h);
       // Account for wrapping around 360 degrees
       const adjustedDiff = hueDiff > 180 ? 360 - hueDiff : hueDiff;
@@ -247,8 +247,8 @@ describe('ColorHarmony', () => {
       
       expect(result.rawValues).toBeDefined();
       expect(result.rawValues).toHaveLength(2);
-      expect(result.rawValues![0]).toEqual({ h: 0, s: 100, l: 50 });
-      expect(result.rawValues![1]).toEqual({ h: 180, s: 100, l: 50 });
+      expect((result.rawValues as any)[0]).toEqual({ h: 0, s: 100, l: 50 });
+      expect((result.rawValues as any)[1]).toEqual({ h: 180, s: 100, l: 50 });
     });
   });
 

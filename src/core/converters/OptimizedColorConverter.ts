@@ -643,14 +643,14 @@ export class OptimizedColorConverter {
           if (alpha !== undefined) {
             const rgba: RGBA = { ...rgb, a: alpha };
             result.rgba = OutputFormatter.formatRGBA(rgba);
-            if (result.rawValues) result.rawValues.rgba = rgba;
+            if (result.rawValues) {result.rawValues.rgba = rgba;}
           }
           break;
 
         case 'hsl': {
           const hsl = ColorSpaceConverter.rgbToHSL(rgb);
           result.hsl = OutputFormatter.formatHSL(hsl);
-          if (result.rawValues) result.rawValues.hsl = hsl;
+          if (result.rawValues) {result.rawValues.hsl = hsl;}
           break;
         }
 
@@ -659,7 +659,7 @@ export class OptimizedColorConverter {
             const hsl = ColorSpaceConverter.rgbToHSL(rgb);
             const hsla: HSLA = { ...hsl, a: alpha };
             result.hsla = OutputFormatter.formatHSLA(hsla);
-            if (result.rawValues) result.rawValues.hsla = hsla;
+            if (result.rawValues) {result.rawValues.hsla = hsla;}
           }
           break;
 
@@ -668,28 +668,28 @@ export class OptimizedColorConverter {
           const hsb = ColorSpaceConverter.rgbToHSB(rgb);
           result.hsb = OutputFormatter.formatHSB(hsb);
           result.hsv = result.hsb;
-          if (result.rawValues) result.rawValues.hsb = hsb;
+          if (result.rawValues) {result.rawValues.hsb = hsb;}
           break;
         }
 
         case 'cmyk': {
           const cmyk = ColorSpaceConverter.rgbToCMYK(rgb);
           result.cmyk = OutputFormatter.formatCMYK(cmyk);
-          if (result.rawValues) result.rawValues.cmyk = cmyk;
+          if (result.rawValues) {result.rawValues.cmyk = cmyk;}
           break;
         }
 
         case 'lab': {
           const lab = ColorSpaceConverter.rgbToLAB(rgb);
           result.lab = OutputFormatter.formatLAB(lab);
-          if (result.rawValues) result.rawValues.lab = lab;
+          if (result.rawValues) {result.rawValues.lab = lab;}
           break;
         }
 
         case 'xyz': {
           const xyz = ColorSpaceConverter.rgbToXYZ(rgb);
           result.xyz = OutputFormatter.formatXYZ(xyz);
-          if (result.rawValues) result.rawValues.xyz = xyz;
+          if (result.rawValues) {result.rawValues.xyz = xyz;}
           break;
         }
       }

@@ -14,8 +14,8 @@ describe('Color Mixing', () => {
       // The result should be somewhere between red and blue
       const rgb = result.rawValues?.rgb;
       expect(rgb).toBeDefined();
-      expect(rgb!.r).toBeGreaterThan(0);
-      expect(rgb!.b).toBeGreaterThan(0);
+      expect((rgb as any).r).toBeGreaterThan(0);
+      expect((rgb as any).b).toBeGreaterThan(0);
     });
 
     it('should mix colors at different ratios', () => {
@@ -31,9 +31,9 @@ describe('Color Mixing', () => {
       const result3 = ColorConverter.mixColors('#ffffff', '#000000', 0.25, 'normal');
       const rgb3 = result3.rawValues?.rgb;
       // LAB mixing produces slightly different results than RGB mixing
-      expect(rgb3!.r).toBeCloseTo(185, -1); // Allow some variance
-      expect(rgb3!.g).toBeCloseTo(185, -1);
-      expect(rgb3!.b).toBeCloseTo(185, -1);
+      expect((rgb3 as any).r).toBeCloseTo(185, -1); // Allow some variance
+      expect((rgb3 as any).g).toBeCloseTo(185, -1);
+      expect((rgb3 as any).b).toBeCloseTo(185, -1);
     });
 
     it('should preserve perceptual uniformity in LAB space', () => {
@@ -43,7 +43,7 @@ describe('Color Mixing', () => {
       // In LAB space, this should produce a more yellowish color rather than muddy brown
       const lab = result.rawValues?.lab;
       expect(lab).toBeDefined();
-      expect(lab!.l).toBeGreaterThan(50); // Should be reasonably bright
+      expect((lab as any).l).toBeGreaterThan(50); // Should be reasonably bright
     });
   });
 
@@ -60,9 +60,9 @@ describe('Color Mixing', () => {
       // Two identical colors multiplied
       const result3 = ColorConverter.mixColors('#808080', '#808080', 0.5, 'multiply');
       const rgb3 = result3.rawValues?.rgb;
-      expect(rgb3!.r).toBe(64); // 128 * 128 / 255 ≈ 64
-      expect(rgb3!.g).toBe(64);
-      expect(rgb3!.b).toBe(64);
+      expect((rgb3 as any).r).toBe(64); // 128 * 128 / 255 ≈ 64
+      expect((rgb3 as any).g).toBe(64);
+      expect((rgb3 as any).b).toBe(64);
     });
 
     it('should darken colors when multiplied', () => {
@@ -70,8 +70,8 @@ describe('Color Mixing', () => {
       const rgb = result.rawValues?.rgb;
       
       // Result should be darker than both input colors
-      expect(rgb!.r).toBeLessThan(255);
-      expect(rgb!.g).toBeLessThan(255);
+      expect((rgb as any).r).toBeLessThan(255);
+      expect((rgb as any).g).toBeLessThan(255);
     });
   });
 
@@ -88,9 +88,9 @@ describe('Color Mixing', () => {
       // Two identical colors screened
       const result3 = ColorConverter.mixColors('#808080', '#808080', 0.5, 'screen');
       const rgb3 = result3.rawValues?.rgb;
-      expect(rgb3!.r).toBe(192); // 255 - ((255-128)*(255-128)/255) ≈ 192
-      expect(rgb3!.g).toBe(192);
-      expect(rgb3!.b).toBe(192);
+      expect((rgb3 as any).r).toBe(192); // 255 - ((255-128)*(255-128)/255) ≈ 192
+      expect((rgb3 as any).g).toBe(192);
+      expect((rgb3 as any).b).toBe(192);
     });
 
     it('should lighten colors when screened', () => {
@@ -98,8 +98,8 @@ describe('Color Mixing', () => {
       const rgb = result.rawValues?.rgb;
       
       // Result should be lighter than both input colors
-      expect(rgb!.r).toBeGreaterThan(0);
-      expect(rgb!.g).toBeGreaterThan(0);
+      expect((rgb as any).r).toBeGreaterThan(0);
+      expect((rgb as any).g).toBeGreaterThan(0);
     });
   });
 
@@ -108,19 +108,19 @@ describe('Color Mixing', () => {
       // Overlay with gray should preserve the gray
       const result1 = ColorConverter.mixColors('#808080', '#808080', 0.5, 'overlay');
       const rgb1 = result1.rawValues?.rgb;
-      expect(rgb1!.r).toBeCloseTo(128, 0);
-      expect(rgb1!.g).toBeCloseTo(128, 0);
-      expect(rgb1!.b).toBeCloseTo(128, 0);
+      expect((rgb1 as any).r).toBeCloseTo(128, 0);
+      expect((rgb1 as any).g).toBeCloseTo(128, 0);
+      expect((rgb1 as any).b).toBeCloseTo(128, 0);
       
       // Dark colors should multiply
       const result2 = ColorConverter.mixColors('#404040', '#404040', 0.5, 'overlay');
       const rgb2 = result2.rawValues?.rgb;
-      expect(rgb2!.r).toBeLessThan(64); // Should be darker
+      expect((rgb2 as any).r).toBeLessThan(64); // Should be darker
       
       // Light colors should screen
       const result3 = ColorConverter.mixColors('#c0c0c0', '#c0c0c0', 0.5, 'overlay');
       const rgb3 = result3.rawValues?.rgb;
-      expect(rgb3!.r).toBeGreaterThan(192); // Should be lighter
+      expect((rgb3 as any).r).toBeGreaterThan(192); // Should be lighter
     });
   });
 
@@ -131,7 +131,7 @@ describe('Color Mixing', () => {
       expect(result.rgba).toBeDefined();
       const rgba = result.rawValues?.rgba;
       expect(rgba).toBeDefined();
-      expect(rgba!.a).toBeCloseTo(0.5, 2);
+      expect((rgba as any).a).toBeCloseTo(0.5, 2);
     });
 
     it('should handle mixed alpha and non-alpha colors', () => {
@@ -149,7 +149,7 @@ describe('Color Mixing', () => {
     it('should interpolate alpha values', () => {
       const result = ColorConverter.mixColors('rgba(255, 0, 0, 0.2)', 'rgba(0, 0, 255, 0.8)', 0.5);
       const rgba = result.rawValues?.rgba;
-      expect(rgba!.a).toBeCloseTo(0.5, 2); // (0.2 * 0.5) + (0.8 * 0.5) = 0.5
+      expect((rgba as any).a).toBeCloseTo(0.5, 2); // (0.2 * 0.5) + (0.8 * 0.5) = 0.5
     });
   });
 
@@ -175,9 +175,9 @@ describe('Color Mixing', () => {
       const result = ColorConverter.mixColors('white', '#000000', 0.5);
       const rgb = result.rawValues?.rgb;
       // LAB mixing produces different values than simple RGB average
-      expect(rgb!.r).toBeCloseTo(119, -1);
-      expect(rgb!.g).toBeCloseTo(119, -1);
-      expect(rgb!.b).toBeCloseTo(119, -1);
+      expect((rgb as any).r).toBeCloseTo(119, -1);
+      expect((rgb as any).g).toBeCloseTo(119, -1);
+      expect((rgb as any).b).toBeCloseTo(119, -1);
     });
   });
 
@@ -195,9 +195,9 @@ describe('Color Mixing', () => {
       expect(lab).toBeDefined();
       // Due to conversion through RGB and back, values will be different
       // The mixing happens in LAB space correctly, but conversion to/from RGB changes values
-      expect(lab!.l).toBeDefined();
-      expect(lab!.a).toBeDefined(); 
-      expect(lab!.b).toBeDefined();
+      expect((lab as any).l).toBeDefined();
+      expect((lab as any).a).toBeDefined(); 
+      expect((lab as any).b).toBeDefined();
     });
 
     it('should mix XYZ colors', () => {

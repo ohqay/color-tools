@@ -39,15 +39,15 @@ describe('Color Converter Integration Tests', () => {
 
       // Verify conversions maintain accuracy (allowing for rounding)
       expect(fromHex).toEqual(originalRGB);
-      expect(Math.abs(fromHSL!.r - originalRGB.r)).toBeLessThanOrEqual(1);
-      expect(Math.abs(fromHSL!.g - originalRGB.g)).toBeLessThanOrEqual(1);
-      expect(Math.abs(fromHSL!.b - originalRGB.b)).toBeLessThanOrEqual(1);
-      expect(Math.abs(fromHSB!.r - originalRGB.r)).toBeLessThanOrEqual(1);
-      expect(Math.abs(fromHSB!.g - originalRGB.g)).toBeLessThanOrEqual(1);
-      expect(Math.abs(fromHSB!.b - originalRGB.b)).toBeLessThanOrEqual(1);
-      expect(Math.abs(fromCMYK!.r - originalRGB.r)).toBeLessThanOrEqual(1);
-      expect(Math.abs(fromCMYK!.g - originalRGB.g)).toBeLessThanOrEqual(1);
-      expect(Math.abs(fromCMYK!.b - originalRGB.b)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromHSL as any).r - originalRGB.r)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromHSL as any).g - originalRGB.g)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromHSL as any).b - originalRGB.b)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromHSB as any).r - originalRGB.r)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromHSB as any).g - originalRGB.g)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromHSB as any).b - originalRGB.b)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromCMYK as any).r - originalRGB.r)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromCMYK as any).g - originalRGB.g)).toBeLessThanOrEqual(1);
+      expect(Math.abs((fromCMYK as any).b - originalRGB.b)).toBeLessThanOrEqual(1);
     });
 
     it('should handle alpha channel throughout conversion pipeline', () => {
@@ -259,7 +259,7 @@ describe('Color Converter Integration Tests', () => {
       const result1 = ColorConverter.convert(hex8);
       
       // Convert the RGBA back to hex
-      const result2 = ColorConverter.convert(result1.rgba!);
+      const result2 = ColorConverter.convert((result1 as any).rgba);
       
       // Should get back to the same hex (allowing for rounding)
       expect(result2.hex).toBe('#d4c7babf');
