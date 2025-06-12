@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { describe, it, expect, vi } from 'vitest';
 import { ColorConverter } from '../colorConverter.js';
 import { ColorFormat } from '../types.js';
 

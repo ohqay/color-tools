@@ -161,6 +161,29 @@ describe('Color Accessibility', () => {
       // Should be darker than original
       expect(result!.color.r).toBeLessThanOrEqual(136);
     });
+
+    test('should use black vs white comparison when maintainHue is false', () => {
+      // Test the black vs white comparison logic (covering lines 233 and similar)
+      // Use a very dark background to test the comparison
+      const result = findAccessibleColor('#808080', '#202020', {
+        maintainHue: false,
+        targetContrast: 3
+      });
+      expect(result).not.toBeNull();
+      // The function should try black or white and return one that works
+      expect(result!.contrast).toBeGreaterThan(0);
+    });
+
+    test('should return best color when maintainHue cannot find perfect match', () => {
+      // When maintainHue is true and target contrast can't be met, return best found
+      const result = findAccessibleColor('#808080', '#808080', {
+        maintainHue: true,
+        targetContrast: 21 // Maximum possible contrast ratio, impossible to achieve
+      });
+      expect(result).not.toBeNull();
+      // Should return the best color found (probably black or white hue-adjusted)
+      expect(result!.contrast).toBeGreaterThan(0);
+    });
   });
 
   describe('getContrastReport', () => {
@@ -215,6 +238,17 @@ describe('Color Accessibility', () => {
       for (let i = 1; i < suggestions.length; i++) {
         expect(suggestions[i - 1].contrast).toBeGreaterThanOrEqual(suggestions[i].contrast);
       }
+    });
+
+    test('should work with RGB object input', () => {
+      // Test line 269 by passing RGB object instead of string
+      const rgbColor: RGB = { r: 100, g: 150, b: 200 };
+      const suggestions = suggestAccessiblePairs(rgbColor, 3);
+      
+      expect(suggestions).toHaveLength(3);
+      suggestions.forEach(suggestion => {
+        expect(suggestion.contrast).toBeGreaterThan(1);
+      });
     });
   });
 

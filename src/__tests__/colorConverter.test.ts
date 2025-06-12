@@ -165,6 +165,13 @@ describe('ColorConverter', () => {
       expect(ColorConverter.hsbToRGB({ h: 120, s: 100, b: 100 })).toEqual({ r: 0, g: 255, b: 0 });
       expect(ColorConverter.hsbToRGB({ h: 240, s: 100, b: 100 })).toEqual({ r: 0, g: 0, b: 255 });
     });
+
+    it('should handle HSB with zero saturation (grayscale)', () => {
+      // This tests the s === 0 branch in hsbToRGB (line 283)
+      expect(ColorConverter.hsbToRGB({ h: 180, s: 0, b: 50 })).toEqual({ r: 128, g: 128, b: 128 });
+      expect(ColorConverter.hsbToRGB({ h: 0, s: 0, b: 100 })).toEqual({ r: 255, g: 255, b: 255 });
+      expect(ColorConverter.hsbToRGB({ h: 360, s: 0, b: 0 })).toEqual({ r: 0, g: 0, b: 0 });
+    });
   });
 
   describe('rgbToCMYK and cmykToRGB', () => {
@@ -332,6 +339,12 @@ describe('ColorConverter', () => {
       expect(ColorConverter.parseToRGB('#FF0000')).toEqual({ r: 255, g: 0, b: 0 });
       expect(ColorConverter.parseToRGB('rgb(255, 0, 0)')).toEqual({ r: 255, g: 0, b: 0 });
       expect(ColorConverter.parseToRGB('hsl(0, 100%, 50%)')).toEqual({ r: 255, g: 0, b: 0 });
+    });
+
+    it('should return null for unsupported format in parseToRGB', () => {
+      // Force a format that doesn't match to trigger the default case
+      // Use an invalid format that won't be detected
+      expect(ColorConverter.parseToRGB('#FF0000', 'unknown' as any)).toBeNull();
     });
   });
 

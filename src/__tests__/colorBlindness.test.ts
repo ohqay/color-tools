@@ -275,6 +275,20 @@ describe('Color Blindness Simulation', () => {
       
       expect(palette).toHaveLength(1);
     });
+
+    test('should break early when no good candidates found', () => {
+      // Use very dark colors that are extremely hard to distinguish to force the algorithm
+      // to give up and hit the break statement (lines 376-377)
+      // Start with a very constrained color space - all very dark colors
+      const veryDarkColor: RGB = { r: 1, g: 1, b: 1 };
+      const palette = generateColorBlindSafePalette([veryDarkColor], 50);
+      
+      // Should return fewer colors than requested due to difficulty finding distinguishable colors
+      // The algorithm should break before generating 50 colors in such a constrained space
+      expect(palette.length).toBeLessThan(50);
+      expect(palette.length).toBeGreaterThan(0);
+      expect(palette[0]).toEqual(veryDarkColor);
+    });
   });
 
   describe('colorBlindnessInfo', () => {

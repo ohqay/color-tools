@@ -20,6 +20,34 @@ describe('ColorHarmony', () => {
       expect(result.colors[0]).toMatch(/^hsl\(/);
       expect(result.colors[1]).toMatch(/^hsl\(/);
     });
+
+    it('should handle HSB/HSV output format', () => {
+      // Test line 67 (hsb case) and hsv case in formatColor
+      const resultHSB = ColorHarmony.generateComplementary('#ff0000', 'hsb');
+      const resultHSV = ColorHarmony.generateComplementary('#ff0000', 'hsv');
+      
+      expect(resultHSB.colors[0]).toMatch(/^hsb\(/);
+      expect(resultHSB.colors[1]).toMatch(/^hsb\(/);
+      expect(resultHSV.colors[0]).toMatch(/^hsb\(/); // HSV should also use HSB format
+      expect(resultHSV.colors[1]).toMatch(/^hsb\(/);
+    });
+
+    it('should handle CMYK output format', () => {
+      // Test line 69 (cmyk case) in formatColor
+      const result = ColorHarmony.generateComplementary('#ff0000', 'cmyk');
+      
+      expect(result.colors[0]).toMatch(/^cmyk\(/);
+      expect(result.colors[1]).toMatch(/^cmyk\(/);
+    });
+
+    it('should handle unknown output format by returning empty string', () => {
+      // Test line 71 (default case) in formatColor
+      const result = ColorHarmony.generateComplementary('#ff0000', 'unknown' as any);
+      
+      // The default case returns result.hex || '', which is empty for unknown formats
+      expect(result.colors[0]).toBe('');
+      expect(result.colors[1]).toBe('');
+    });
   });
 
   describe('Complementary Harmony', () => {
