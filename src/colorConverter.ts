@@ -1,4 +1,4 @@
-import { RGB, RGBA, HSL, HSLA, HSB, CMYK, LAB, XYZ, ColorFormat, ConversionResult, BlendMode, MixResult } from './types.js';
+import type { RGB, RGBA, HSL, HSLA, HSB, CMYK, LAB, XYZ, ColorFormat, ConversionResult, BlendMode, MixResult } from './types.js';
 import { NAMED_COLORS_MAP_INTERNAL } from './namedColors.js';
 
 // Pre-computed constants for performance optimization
@@ -115,23 +115,23 @@ export class ColorConverter {
     }
     
     // Optimized format detection using pre-compiled patterns
-    if (FORMAT_PATTERNS.hex.test(trimmed)) return 'hex';
-    if (FORMAT_PATTERNS.rgba.test(trimmed)) return 'rgba';
-    if (FORMAT_PATTERNS.rgb.test(trimmed) || FORMAT_PATTERNS.rgbSimple.test(trimmed)) return 'rgb';
-    if (FORMAT_PATTERNS.hsla.test(trimmed)) return 'hsla';
-    if (FORMAT_PATTERNS.hsl.test(trimmed)) return 'hsl';
-    if (FORMAT_PATTERNS.hsb.test(trimmed)) return 'hsb';
-    if (FORMAT_PATTERNS.cmyk.test(trimmed)) return 'cmyk';
-    if (FORMAT_PATTERNS.lab.test(trimmed)) return 'lab';
-    if (FORMAT_PATTERNS.xyz.test(trimmed)) return 'xyz';
+    if (FORMAT_PATTERNS.hex.test(trimmed)) {return 'hex';}
+    if (FORMAT_PATTERNS.rgba.test(trimmed)) {return 'rgba';}
+    if (FORMAT_PATTERNS.rgb.test(trimmed) || FORMAT_PATTERNS.rgbSimple.test(trimmed)) {return 'rgb';}
+    if (FORMAT_PATTERNS.hsla.test(trimmed)) {return 'hsla';}
+    if (FORMAT_PATTERNS.hsl.test(trimmed)) {return 'hsl';}
+    if (FORMAT_PATTERNS.hsb.test(trimmed)) {return 'hsb';}
+    if (FORMAT_PATTERNS.cmyk.test(trimmed)) {return 'cmyk';}
+    if (FORMAT_PATTERNS.lab.test(trimmed)) {return 'lab';}
+    if (FORMAT_PATTERNS.xyz.test(trimmed)) {return 'xyz';}
     
     return null;
   }
 
   // Parse input string to RGB (with optional alpha)
   static parseToRGB(input: string, format?: ColorFormat): RGB | RGBA | null {
-    const detectedFormat = format || this.detectFormat(input);
-    if (!detectedFormat) return null;
+    const detectedFormat = format ?? this.detectFormat(input);
+    if (!detectedFormat) {return null;}
 
     const trimmed = input.trim();
     const trimmedLower = trimmed.toLowerCase();
@@ -157,10 +157,11 @@ export class ColorConverter {
         return this.parseRGBAString(trimmed);
       case 'hsl':
         return this.hslToRGB(this.parseHSLString(trimmed)!);
-      case 'hsla':
+      case 'hsla': {
         const hsla = this.parseHSLAString(trimmed)!;
         const rgb = this.hslToRGB(hsla);
         return { ...rgb, a: hsla.a } as RGBA;
+      }
       case 'hsb':
       case 'hsv':
         return this.hsbToRGB(this.parseHSBString(trimmed)!);
@@ -285,11 +286,11 @@ export class ColorConverter {
       r = g = b = l;
     } else {
       const hue2rgb = (p: number, q: number, t: number) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        if (t < 0) {t += 1;}
+        if (t > 1) {t -= 1;}
+        if (t < 1/6) {return p + (q - p) * 6 * t;}
+        if (t < 1/2) {return q;}
+        if (t < 2/3) {return p + (q - p) * (2/3 - t) * 6;}
         return p;
       };
 
@@ -507,7 +508,7 @@ export class ColorConverter {
     const rgbMatch = input.match(/rgb\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/i) ||
                      input.match(/^(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)$/);
     
-    if (!rgbMatch) return null;
+    if (!rgbMatch) {return null;}
 
     const r = parseInt(rgbMatch[1], 10);
     const g = parseInt(rgbMatch[2], 10);
@@ -524,7 +525,7 @@ export class ColorConverter {
   // Parse RGBA string - optimized
   static parseRGBAString(input: string): RGBA | null {
     const match = input.match(/rgba\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?[\d.]+)\s*\)/i);
-    if (!match) return null;
+    if (!match) {return null;}
 
     const r = parseInt(match[1], 10);
     const g = parseInt(match[2], 10);
@@ -546,7 +547,7 @@ export class ColorConverter {
   // Parse HSL string
   static parseHSLString(input: string): HSL | null {
     const match = input.match(/(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?/);
-    if (!match) return null;
+    if (!match) {return null;}
 
     const h = parseInt(match[1]);
     const s = parseInt(match[2]);
@@ -565,7 +566,7 @@ export class ColorConverter {
   // Parse HSLA string
   static parseHSLAString(input: string): HSLA | null {
     const match = input.match(/hsla\s*\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*([\d.]+)\s*\)/i);
-    if (!match) return null;
+    if (!match) {return null;}
 
     const h = parseInt(match[1]);
     const s = parseInt(match[2]);
@@ -588,7 +589,7 @@ export class ColorConverter {
   // Parse HSB/HSV string
   static parseHSBString(input: string): HSB | null {
     const match = input.match(/(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?/);
-    if (!match) return null;
+    if (!match) {return null;}
 
     const h = parseInt(match[1]);
     const s = parseInt(match[2]);
@@ -607,7 +608,7 @@ export class ColorConverter {
   // Parse CMYK string
   static parseCMYKString(input: string): CMYK | null {
     const match = input.match(/(-?\d+)%?\s*,\s*(-?\d+)%?\s*,\s*(-?\d+)%?\s*,\s*(-?\d+)%?/);
-    if (!match) return null;
+    if (!match) {return null;}
 
     const c = parseInt(match[1]);
     const m = parseInt(match[2]);
@@ -624,7 +625,7 @@ export class ColorConverter {
   // Parse LAB string
   static parseLABString(input: string): LAB | null {
     const match = input.match(/lab\s*\(\s*(-?[\d.]+)%?\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/i);
-    if (!match) return null;
+    if (!match) {return null;}
 
     const l = parseFloat(match[1]);
     const a = parseFloat(match[2]);
@@ -645,7 +646,7 @@ export class ColorConverter {
   // Parse XYZ string
   static parseXYZString(input: string): XYZ | null {
     const match = input.match(/xyz\s*\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/i);
-    if (!match) return null;
+    if (!match) {return null;}
 
     const x = parseFloat(match[1]);
     const y = parseFloat(match[2]);
@@ -700,7 +701,7 @@ export class ColorConverter {
   static convert(input: string, from?: ColorFormat, to?: ColorFormat[]): ConversionResult {
     // Create cache key (handle undefined vs empty array difference)
     const targetFormatsKey = to === undefined ? 'all' : to.join(',');
-    const cacheKey = `${input}|${from || 'auto'}|${targetFormatsKey}`;
+    const cacheKey = `${input}|${from ?? 'auto'}|${targetFormatsKey}`;
     
     // Check cache first
     const cached = conversionCache.get(cacheKey);
@@ -720,7 +721,7 @@ export class ColorConverter {
     const alpha = hasAlpha ? (rgbOrRgba as RGBA).a : undefined;
 
     // If no target formats specified, return all. If empty array, return none (just raw values)
-    const targetFormats = to === undefined ? ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk', 'lab', 'xyz'] : to;
+    const targetFormats = to ?? ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk', 'lab', 'xyz'];
     const result: ConversionResult = { rawValues: { rgb } };
 
     for (const format of targetFormats) {
@@ -744,11 +745,12 @@ export class ColorConverter {
             result.rawValues!.rgba = rgba;
           }
           break;
-        case 'hsl':
+        case 'hsl': {
           const hsl = this.rgbToHSL(rgb);
           result.hsl = this.formatHSL(hsl);
           result.rawValues!.hsl = hsl;
           break;
+        }
         case 'hsla':
           if (alpha !== undefined) {
             const hsl = this.rgbToHSL(rgb);
@@ -758,27 +760,31 @@ export class ColorConverter {
           }
           break;
         case 'hsb':
-        case 'hsv':
+        case 'hsv': {
           const hsb = this.rgbToHSB(rgb);
           result.hsb = this.formatHSB(hsb);
           result.hsv = result.hsb; // HSB and HSV are the same
           result.rawValues!.hsb = hsb;
           break;
-        case 'cmyk':
+        }
+        case 'cmyk': {
           const cmyk = this.rgbToCMYK(rgb);
           result.cmyk = this.formatCMYK(cmyk);
           result.rawValues!.cmyk = cmyk;
           break;
-        case 'lab':
+        }
+        case 'lab': {
           const lab = this.rgbToLAB(rgb);
           result.lab = this.formatLAB(lab);
           result.rawValues!.lab = lab;
           break;
-        case 'xyz':
+        }
+        case 'xyz': {
           const xyz = this.rgbToXYZ(rgb);
           result.xyz = this.formatXYZ(xyz);
           result.rawValues!.xyz = xyz;
           break;
+        }
       }
     }
 
@@ -801,7 +807,7 @@ export class ColorConverter {
   }
 
   // Mix two colors in LAB space (perceptually uniform)
-  static mixColors(color1: string, color2: string, ratio: number = 0.5, mode: BlendMode = 'normal'): MixResult {
+  static mixColors(color1: string, color2: string, ratio = 0.5, mode: BlendMode = 'normal'): MixResult {
     // Parse both colors to RGB
     const rgb1 = this.parseToRGB(color1);
     const rgb2 = this.parseToRGB(color2);
@@ -814,7 +820,7 @@ export class ColorConverter {
     let mixedRgb: RGB;
     
     switch (mode) {
-      case 'normal':
+      case 'normal': {
         // Mix in LAB space for perceptually uniform results
         const lab1 = this.rgbToLAB(rgb1);
         const lab2 = this.rgbToLAB(rgb2);
@@ -827,6 +833,7 @@ export class ColorConverter {
         
         mixedRgb = this.labToRGB(mixedLab);
         break;
+      }
         
       case 'multiply':
         mixedRgb = {
@@ -844,7 +851,7 @@ export class ColorConverter {
         };
         break;
         
-      case 'overlay':
+      case 'overlay': {
         const overlay = (base: number, blend: number) => {
           return base < 128
             ? (2 * base * blend) / 255
@@ -857,6 +864,7 @@ export class ColorConverter {
           b: Math.round(overlay(rgb1.b, rgb2.b))
         };
         break;
+      }
         
       default:
         throw new Error(`Unknown blend mode: ${mode}`);

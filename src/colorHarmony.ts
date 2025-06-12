@@ -1,4 +1,5 @@
-import { HSL, RGB, ColorFormat, ConversionResult } from './types.js';
+import type { HSL, ColorFormat} from './types.js';
+import { RGB, ConversionResult } from './types.js';
 import { ColorConverter } from './colorConverter.js';
 
 export type HarmonyType = 
@@ -32,8 +33,8 @@ export class ColorHarmony {
    * Normalize hue value to be within 0-360 range
    */
   private static normalizeHue(hue: number): number {
-    while (hue < 0) hue += 360;
-    while (hue >= 360) hue -= 360;
+    while (hue < 0) {hue += 360;}
+    while (hue >= 360) {hue -= 360;}
     return hue;
   }
 
@@ -57,18 +58,18 @@ export class ColorHarmony {
     
     switch (format) {
       case 'hex':
-        return result.hex || '';
+        return result.hex ?? '';
       case 'rgb':
-        return result.rgb || '';
+        return result.rgb ?? '';
       case 'hsl':
-        return result.hsl || '';
+        return result.hsl ?? '';
       case 'hsb':
       case 'hsv':
-        return result.hsb || '';
+        return result.hsb ?? '';
       case 'cmyk':
-        return result.cmyk || '';
+        return result.cmyk ?? '';
       default:
-        return result.hex || '';
+        return result.hex ?? '';
     }
   }
 
@@ -81,7 +82,7 @@ export class ColorHarmony {
     options: HarmonyOptions = {}
   ): HarmonyResult {
     const hsl = this.toHSL(baseColor);
-    const adjustment = options.angleAdjustment || 0;
+    const adjustment = options.angleAdjustment ?? 0;
     
     // Complementary is 180 degrees opposite
     const complementaryHue = this.normalizeHue(hsl.h + 180 + adjustment);
@@ -107,9 +108,9 @@ export class ColorHarmony {
     options: HarmonyOptions = {}
   ): HarmonyResult {
     const hsl = this.toHSL(baseColor);
-    const count = options.analogousCount || 3;
-    const angle = options.analogousAngle || 30;
-    const adjustment = options.angleAdjustment || 0;
+    const count = options.analogousCount ?? 3;
+    const angle = options.analogousAngle ?? 30;
+    const adjustment = options.angleAdjustment ?? 0;
     
     const colors: HSL[] = [hsl];
     
@@ -145,7 +146,7 @@ export class ColorHarmony {
     options: HarmonyOptions = {}
   ): HarmonyResult {
     const hsl = this.toHSL(baseColor);
-    const adjustment = options.angleAdjustment || 0;
+    const adjustment = options.angleAdjustment ?? 0;
     
     const colors: HSL[] = [
       hsl,
@@ -170,7 +171,7 @@ export class ColorHarmony {
     options: HarmonyOptions = {}
   ): HarmonyResult {
     const hsl = this.toHSL(baseColor);
-    const adjustment = options.angleAdjustment || 0;
+    const adjustment = options.angleAdjustment ?? 0;
     
     const colors: HSL[] = [
       hsl,
@@ -197,7 +198,7 @@ export class ColorHarmony {
     options: HarmonyOptions = {}
   ): HarmonyResult {
     const hsl = this.toHSL(baseColor);
-    const adjustment = options.angleAdjustment || 0;
+    const adjustment = options.angleAdjustment ?? 0;
     const splitAngle = 30; // Standard split angle
     
     const complementaryHue = hsl.h + 180;
@@ -226,7 +227,7 @@ export class ColorHarmony {
     options: HarmonyOptions = {}
   ): HarmonyResult {
     const hsl = this.toHSL(baseColor);
-    const adjustment = options.angleAdjustment || 0;
+    const adjustment = options.angleAdjustment ?? 0;
     const rectangleAngle = 60; // Creates a rectangle shape
     
     const colors: HSL[] = [

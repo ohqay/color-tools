@@ -1,4 +1,4 @@
-import { RGB } from './types.js';
+import type { RGB } from './types.js';
 import { ColorConverter } from './colorConverter.js';
 
 /**
@@ -76,11 +76,11 @@ export function calculateContrastRatio(color1: RGB, color2: RGB): number {
 export function checkContrast(foreground: string | RGB, background: string | RGB): ContrastResult {
   // Convert colors to RGB if needed
   const fgRgb = typeof foreground === 'string' 
-    ? ColorConverter.parseToRGB(foreground) || { r: 0, g: 0, b: 0 }
+    ? ColorConverter.parseToRGB(foreground) ?? { r: 0, g: 0, b: 0 }
     : foreground;
   
   const bgRgb = typeof background === 'string'
-    ? ColorConverter.parseToRGB(background) || { r: 0, g: 0, b: 0 }
+    ? ColorConverter.parseToRGB(background) ?? { r: 0, g: 0, b: 0 }
     : background;
 
   const ratio = calculateContrastRatio(fgRgb, bgRgb);
@@ -136,11 +136,11 @@ export function findAccessibleColor(
 
   // Convert to RGB
   const targetRgb = typeof targetColor === 'string'
-    ? ColorConverter.parseToRGB(targetColor) || { r: 0, g: 0, b: 0 }
+    ? ColorConverter.parseToRGB(targetColor) ?? { r: 0, g: 0, b: 0 }
     : targetColor;
   
   const bgRgb = typeof backgroundColor === 'string'
-    ? ColorConverter.parseToRGB(backgroundColor) || { r: 0, g: 0, b: 0 }
+    ? ColorConverter.parseToRGB(backgroundColor) ?? { r: 0, g: 0, b: 0 }
     : backgroundColor;
 
   // Check if current contrast is already sufficient
@@ -155,7 +155,7 @@ export function findAccessibleColor(
 
   // Determine background luminance to decide direction
   const bgLuminance = calculateRelativeLuminance(bgRgb);
-  const shouldDarken = preferDarker !== null ? preferDarker : bgLuminance > 0.5;
+  const shouldDarken = preferDarker ?? bgLuminance > 0.5;
 
   if (maintainHue) {
     // Convert to HSL to maintain hue while adjusting lightness
@@ -258,23 +258,23 @@ export function getContrastReport(color: string | RGB): {
 /**
  * Suggest accessible color pairs for text and background
  */
-export function suggestAccessiblePairs(baseColor: string | RGB, count: number = 5): Array<{
+export function suggestAccessiblePairs(baseColor: string | RGB, count = 5): {
   foreground: { color: RGB; hex: string };
   background: { color: RGB; hex: string };
   contrast: number;
   passes: ContrastResult['passes'];
-}> {
+}[] {
   const baseRgb = typeof baseColor === 'string'
-    ? ColorConverter.parseToRGB(baseColor) || { r: 0, g: 0, b: 0 }
+    ? ColorConverter.parseToRGB(baseColor) ?? { r: 0, g: 0, b: 0 }
     : baseColor;
 
   const baseHsl = ColorConverter.rgbToHSL(baseRgb);
-  const suggestions: Array<{
+  const suggestions: {
     foreground: { color: RGB; hex: string };
     background: { color: RGB; hex: string };
     contrast: number;
     passes: ContrastResult['passes'];
-  }> = [];
+  }[] = [];
 
   // Generate variations
   const lightnessVariations = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95];
@@ -282,7 +282,7 @@ export function suggestAccessiblePairs(baseColor: string | RGB, count: number = 
 
   for (const l1 of lightnessVariations) {
     for (const l2 of lightnessVariations) {
-      if (Math.abs(l1 - l2) < 30) continue; // Skip similar lightness values
+      if (Math.abs(l1 - l2) < 30) {continue;} // Skip similar lightness values
 
       const color1 = ColorConverter.hslToRGB({ ...baseHsl, l: l1 });
       const color2 = ColorConverter.hslToRGB({ ...baseHsl, l: l2 });

@@ -710,17 +710,17 @@ export function getPalette(name: string): PaletteCollection | undefined {
 // Helper function to get a specific color from a palette
 export function getPaletteColor(paletteName: string, colorName: string, shade?: string): ColorShade | undefined {
   const palette = getPalette(paletteName);
-  if (!palette) return undefined;
+  if (!palette) {return undefined;}
   
   const color = palette.colors.find(c => c.name.toLowerCase() === colorName.toLowerCase());
-  if (!color) return undefined;
+  if (!color) {return undefined;}
   
   if (shade) {
     return color.shades.find(s => s.name === shade);
   }
   
   // Return the middle shade (500) if no specific shade requested
-  return color.shades.find(s => s.name === '500') || color.shades[Math.floor(color.shades.length / 2)];
+  return color.shades.find(s => s.name === '500') ?? color.shades[Math.floor(color.shades.length / 2)];
 }
 
 // Clear palette cache (useful for testing)

@@ -2,7 +2,7 @@
  * Optimized ColorConverter with improved performance and modular architecture
  */
 
-import { RGB, RGBA, HSL, HSLA, HSB, CMYK, LAB, XYZ, ColorFormat, ConversionResult, BlendMode, MixResult } from '../../types.js';
+import type { RGB, RGBA, HSL, HSLA, HSB, CMYK, LAB, XYZ, ColorFormat, ConversionResult, BlendMode, MixResult } from '../../types.js';
 import { NAMED_COLORS_MAP_INTERNAL } from '../../namedColors.js';
 import { conversionCache } from '../cache/AdvancedCache.js';
 import { performanceMonitor, measureTime } from '../monitoring/PerformanceMonitor.js';
@@ -49,7 +49,7 @@ class InputParser {
 
   static parseToRGB(input: string, hint?: ColorFormat): RGB | RGBA | null {
     const trimmed = input.trim();
-    const detectedFormat = hint || this.detectFormat(trimmed);
+    const detectedFormat = hint ?? this.detectFormat(trimmed);
 
     if (!detectedFormat) {
       return null;
@@ -81,7 +81,7 @@ class InputParser {
       }
     });
     
-    return result || null;
+    return result ?? null;
   }
 
   private static parseHex(hex: string): RGB | RGBA {
@@ -251,32 +251,32 @@ class InputParser {
 
   // Validation methods
   private static validateRGBValues(r: number, g: number, b: number): void {
-    if (r < 0 || r > 255) throw ColorErrorFactory.outOfRange(r, 0, 255, 'red');
-    if (g < 0 || g > 255) throw ColorErrorFactory.outOfRange(g, 0, 255, 'green');
-    if (b < 0 || b > 255) throw ColorErrorFactory.outOfRange(b, 0, 255, 'blue');
+    if (r < 0 || r > 255) {throw ColorErrorFactory.outOfRange(r, 0, 255, 'red');}
+    if (g < 0 || g > 255) {throw ColorErrorFactory.outOfRange(g, 0, 255, 'green');}
+    if (b < 0 || b > 255) {throw ColorErrorFactory.outOfRange(b, 0, 255, 'blue');}
   }
 
   private static validateHSLValues(h: number, s: number, l: number): void {
-    if (h < 0 || h > 360) throw ColorErrorFactory.outOfRange(h, 0, 360, 'hue');
-    if (s < 0 || s > 100) throw ColorErrorFactory.outOfRange(s, 0, 100, 'saturation');
-    if (l < 0 || l > 100) throw ColorErrorFactory.outOfRange(l, 0, 100, 'lightness');
+    if (h < 0 || h > 360) {throw ColorErrorFactory.outOfRange(h, 0, 360, 'hue');}
+    if (s < 0 || s > 100) {throw ColorErrorFactory.outOfRange(s, 0, 100, 'saturation');}
+    if (l < 0 || l > 100) {throw ColorErrorFactory.outOfRange(l, 0, 100, 'lightness');}
   }
 
   private static validateHSBValues(h: number, s: number, b: number): void {
-    if (h < 0 || h > 360) throw ColorErrorFactory.outOfRange(h, 0, 360, 'hue');
-    if (s < 0 || s > 100) throw ColorErrorFactory.outOfRange(s, 0, 100, 'saturation');
-    if (b < 0 || b > 100) throw ColorErrorFactory.outOfRange(b, 0, 100, 'brightness');
+    if (h < 0 || h > 360) {throw ColorErrorFactory.outOfRange(h, 0, 360, 'hue');}
+    if (s < 0 || s > 100) {throw ColorErrorFactory.outOfRange(s, 0, 100, 'saturation');}
+    if (b < 0 || b > 100) {throw ColorErrorFactory.outOfRange(b, 0, 100, 'brightness');}
   }
 
   private static validateCMYKValues(c: number, m: number, y: number, k: number): void {
-    if (c < 0 || c > 100) throw ColorErrorFactory.outOfRange(c, 0, 100, 'cyan');
-    if (m < 0 || m > 100) throw ColorErrorFactory.outOfRange(m, 0, 100, 'magenta');
-    if (y < 0 || y > 100) throw ColorErrorFactory.outOfRange(y, 0, 100, 'yellow');
-    if (k < 0 || k > 100) throw ColorErrorFactory.outOfRange(k, 0, 100, 'black');
+    if (c < 0 || c > 100) {throw ColorErrorFactory.outOfRange(c, 0, 100, 'cyan');}
+    if (m < 0 || m > 100) {throw ColorErrorFactory.outOfRange(m, 0, 100, 'magenta');}
+    if (y < 0 || y > 100) {throw ColorErrorFactory.outOfRange(y, 0, 100, 'yellow');}
+    if (k < 0 || k > 100) {throw ColorErrorFactory.outOfRange(k, 0, 100, 'black');}
   }
 
   private static validateAlpha(alpha: number): void {
-    if (alpha < 0 || alpha > 1) throw ColorErrorFactory.outOfRange(alpha, 0, 1, 'alpha');
+    if (alpha < 0 || alpha > 1) {throw ColorErrorFactory.outOfRange(alpha, 0, 1, 'alpha');}
   }
 }
 
@@ -445,9 +445,9 @@ class ColorSpaceConverter {
   // RGB ↔ XYZ conversions
   static rgbToXYZ(rgb: RGB): XYZ {
     // Convert to linear RGB
-    let r = OptimizedMath.removeGammaCorrection(rgb.r / 255);
-    let g = OptimizedMath.removeGammaCorrection(rgb.g / 255);
-    let b = OptimizedMath.removeGammaCorrection(rgb.b / 255);
+    const r = OptimizedMath.removeGammaCorrection(rgb.r / 255);
+    const g = OptimizedMath.removeGammaCorrection(rgb.g / 255);
+    const b = OptimizedMath.removeGammaCorrection(rgb.b / 255);
 
     // Apply transformation matrix
     const [x, y, z] = OptimizedMath.matrixTransform3x3(COLOR_MATRICES.SRGB_TO_XYZ, [r, g, b]);
@@ -696,7 +696,7 @@ export class OptimizedColorConverter {
   }
 
   // Batch processing for multiple colors
-  static convertBatch(inputs: Array<{input: string, from?: ColorFormat, to?: ColorFormat[]}>): ConversionResult[] {
+  static convertBatch(inputs: {input: string, from?: ColorFormat, to?: ColorFormat[]}[]): ConversionResult[] {
     const { result, duration } = measureTime(() => {
       return inputs.map(({ input, from, to }) => this.performConversion(input, from, to));
     });

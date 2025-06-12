@@ -4,14 +4,14 @@ import { NAMED_COLORS } from '../namedColors.js';
 export interface ColorCategory {
   name: string;
   description: string;
-  colors: Array<{
+  colors: {
     name: string;
     hex: string;
-  }>;
+  }[];
 }
 
 // Helper function to get color entries
-function getColorEntries(colorNames: string[]): Array<{ name: string; hex: string }> {
+function getColorEntries(colorNames: string[]): { name: string; hex: string }[] {
   return colorNames.map(name => ({
     name,
     hex: NAMED_COLORS[name] || '#000000'
@@ -131,7 +131,7 @@ export interface NamedColorsResource {
   description: string;
   totalColors: number;
   categories: ColorCategory[];
-  allColors: Array<{ name: string; hex: string }>;
+  allColors: { name: string; hex: string }[];
 }
 
 export const namedColorsResource: NamedColorsResource = {

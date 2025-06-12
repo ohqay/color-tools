@@ -1,4 +1,4 @@
-import { RGB } from './types.js';
+import type { RGB } from './types.js';
 import { ColorConverter } from './colorConverter.js';
 
 /**
@@ -184,7 +184,7 @@ export function simulateColorBlindness(
 ): RGB {
   // Convert to RGB if needed
   const rgb = typeof color === 'string'
-    ? ColorConverter.parseToRGB(color) || { r: 0, g: 0, b: 0 }
+    ? ColorConverter.parseToRGB(color) ?? { r: 0, g: 0, b: 0 }
     : color;
 
   // Get the transformation matrix
@@ -241,7 +241,7 @@ export function areColorsDistinguishable(
   color1: string | RGB,
   color2: string | RGB,
   type: ColorBlindnessType,
-  threshold: number = 10 // Minimum difference in RGB space
+  threshold = 10 // Minimum difference in RGB space
 ): boolean {
   const simulated1 = simulateColorBlindness(color1, type);
   const simulated2 = simulateColorBlindness(color2, type);
@@ -261,11 +261,11 @@ export function areColorsDistinguishable(
  */
 export function findColorBlindSafeAlternative(
   originalColor: string | RGB,
-  referenceColors: Array<string | RGB>,
+  referenceColors: (string | RGB)[],
   types: ColorBlindnessType[] = ['protanopia', 'deuteranopia', 'tritanopia']
 ): RGB | null {
   const original = typeof originalColor === 'string'
-    ? ColorConverter.parseToRGB(originalColor) || { r: 0, g: 0, b: 0 }
+    ? ColorConverter.parseToRGB(originalColor) ?? { r: 0, g: 0, b: 0 }
     : originalColor;
 
   // Convert to HSL for manipulation
@@ -295,7 +295,7 @@ export function findColorBlindSafeAlternative(
             break;
           }
         }
-        if (!isDistinguishable) break;
+        if (!isDistinguishable) {break;}
       }
 
       if (isDistinguishable) {
@@ -311,15 +311,15 @@ export function findColorBlindSafeAlternative(
  * Generate a color palette that is safe for color blind users
  */
 export function generateColorBlindSafePalette(
-  baseColors: Array<string | RGB>,
-  count: number = 5
+  baseColors: (string | RGB)[],
+  count = 5
 ): RGB[] {
   const palette: RGB[] = [];
   const types: ColorBlindnessType[] = ['protanopia', 'deuteranopia', 'tritanopia'];
 
   // Start with the first base color
   const firstColor = typeof baseColors[0] === 'string'
-    ? ColorConverter.parseToRGB(baseColors[0]) || { r: 0, g: 0, b: 0 }
+    ? ColorConverter.parseToRGB(baseColors[0]) ?? { r: 0, g: 0, b: 0 }
     : baseColors[0];
   palette.push(firstColor);
 
@@ -360,7 +360,7 @@ export function generateColorBlindSafePalette(
           minDistance = Math.min(minDistance, distance);
         }
 
-        if (!isDistinguishable) break;
+        if (!isDistinguishable) {break;}
       }
 
       if (isDistinguishable && minDistance > bestMinDistance) {

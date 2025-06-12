@@ -20,15 +20,15 @@ const mockGenerateHarmony = (params: any) => {
   const result = ColorHarmony.generateHarmony(
     baseColor,
     harmonyType,
-    outputFormat || 'hex',
-    options || {}
+    outputFormat ?? 'hex',
+    options ?? {}
   );
   
   return {
     success: true,
     input: baseColor,
     harmonyType: harmonyType,
-    outputFormat: outputFormat || 'hex',
+    outputFormat: outputFormat ?? 'hex',
     result: {
       baseColor: result.baseColor,
       colors: result.colors,

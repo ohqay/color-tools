@@ -24,7 +24,7 @@ let mockReadResourceHandler: Function;
 const mockServer = {
   setRequestHandler: vi.fn((schema: any, handler: Function) => {
     // Store handlers for testing
-    const schemaName = schema?.name || schema;
+    const schemaName = schema?.name ?? schema;
     if (schemaName?.includes?.('ListTools') || schema === 'list-tools') {
       mockListToolsHandler = handler;
     } else if (schemaName?.includes?.('CallTool') || schema === 'call-tool') {

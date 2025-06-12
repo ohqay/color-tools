@@ -23,7 +23,7 @@ export interface CacheConfig {
   maxSize?: number;
   ttlMs?: number;
   smartSizing?: boolean;
-  preWarmEntries?: Array<{ key: string; value: any }>;
+  preWarmEntries?: { key: string; value: any }[];
   enableMetrics?: boolean;
 }
 
@@ -45,9 +45,9 @@ export class AdvancedCache<T = any> {
   private readonly shrinkThreshold = 0.7; // Shrink when hit rate falls below this
 
   constructor(config: CacheConfig = {}) {
-    this.maxSize = config.maxSize || 100;
+    this.maxSize = config.maxSize ?? 100;
     this.initialMaxSize = this.maxSize;
-    this.ttlMs = config.ttlMs || 5 * 60 * 1000; // 5 minutes default
+    this.ttlMs = config.ttlMs ?? 5 * 60 * 1000; // 5 minutes default
     this.smartSizing = config.smartSizing ?? true;
     this.enableMetrics = config.enableMetrics ?? true;
 
@@ -64,14 +64,14 @@ export class AdvancedCache<T = any> {
     const entry = this.cache.get(key);
     
     if (!entry) {
-      if (this.enableMetrics) this.missCount++;
+      if (this.enableMetrics) {this.missCount++;}
       return undefined;
     }
 
     // Check TTL
     if (this.isExpired(entry)) {
       this.cache.delete(key);
-      if (this.enableMetrics) this.missCount++;
+      if (this.enableMetrics) {this.missCount++;}
       return undefined;
     }
 
@@ -83,7 +83,7 @@ export class AdvancedCache<T = any> {
     this.cache.delete(key);
     this.cache.set(key, entry);
 
-    if (this.enableMetrics) this.hitCount++;
+    if (this.enableMetrics) {this.hitCount++;}
     return entry.value;
   }
 
@@ -153,7 +153,7 @@ export class AdvancedCache<T = any> {
   }
 
   // Pre-warm cache with common entries
-  private preWarmCache(entries: Array<{ key: string; value: any }>): void {
+  private preWarmCache(entries: { key: string; value: any }[]): void {
     for (const { key, value } of entries) {
       this.set(key, value);
     }
@@ -181,7 +181,7 @@ export class AdvancedCache<T = any> {
 
     if (oldestEntry) {
       this.cache.delete(oldestEntry.key);
-      if (this.enableMetrics) this.evictionCount++;
+      if (this.enableMetrics) {this.evictionCount++;}
     }
   }
 
@@ -244,7 +244,7 @@ export class AdvancedCache<T = any> {
   }
 
   // Debug methods
-  getTopEntries(count = 10): Array<{ key: string; accessCount: number; age: number }> {
+  getTopEntries(count = 10): { key: string; accessCount: number; age: number }[] {
     const now = Date.now();
     const entries = Array.from(this.cache.entries())
       .map(([key, entry]) => ({

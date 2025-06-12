@@ -4,7 +4,6 @@
     "module": "ES2022",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./src",
     
     // Strict type checking (balanced for compatibility)
     "strict": true,
@@ -43,6 +42,6 @@
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/__tests__/**/*"]
+  "include": ["src/**/*", "examples/**/*", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist", "coverage"]
 }

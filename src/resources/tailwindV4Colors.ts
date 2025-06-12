@@ -397,7 +397,7 @@ export function getTailwindV4Color(colorName: string): TailwindV4Color | undefin
 
 export function getTailwindV4ColorShade(colorName: string, shade: string): TailwindV4ColorShade | undefined {
   const color = getTailwindV4Color(colorName);
-  if (!color) return undefined;
+  if (!color) {return undefined;}
   
   return color.shades.find(s => s.name === shade);
 }
@@ -416,8 +416,8 @@ export function findTailwindV4ColorByHex(hexValue: string): { color: string; sha
   return undefined;
 }
 
-export function searchTailwindV4Colors(query: string): Array<{ color: string; shade: string; value: string }> {
-  const results: Array<{ color: string; shade: string; value: string }> = [];
+export function searchTailwindV4Colors(query: string): { color: string; shade: string; value: string }[] {
+  const results: { color: string; shade: string; value: string }[] = [];
   const normalizedQuery = query.toLowerCase();
   
   for (const color of tailwindV4Palette.colors) {

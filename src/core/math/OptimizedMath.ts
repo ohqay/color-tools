@@ -187,8 +187,8 @@ export const OptimizedMath = {
   
   // Fast modulo for positive numbers
   fastMod360: (degrees: number): number => {
-    while (degrees < 0) degrees += 360;
-    while (degrees >= 360) degrees -= 360;
+    while (degrees < 0) {degrees += 360;}
+    while (degrees >= 360) {degrees -= 360;}
     return degrees;
   },
   
@@ -219,7 +219,7 @@ export const OptimizedMath = {
     const min = Math.min(r, g, b);
     const delta = max - min;
     
-    if (delta === 0) return 0;
+    if (delta === 0) {return 0;}
     
     let hue: number;
     if (max === r) {
@@ -231,7 +231,7 @@ export const OptimizedMath = {
     }
     
     hue *= 60;
-    if (hue < 0) hue += 360;
+    if (hue < 0) {hue += 360;}
     
     return hue;
   },
@@ -239,7 +239,7 @@ export const OptimizedMath = {
   // Optimized saturation and lightness calculations
   calculateSaturation: (max: number, min: number, lightness: number): number => {
     const delta = max - min;
-    if (delta === 0) return 0;
+    if (delta === 0) {return 0;}
     
     return lightness > 0.5
       ? delta / (2 - max - min)
