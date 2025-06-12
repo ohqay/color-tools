@@ -55,11 +55,11 @@ describe('MCP Server Tools', () => {
 
     test('should handle errors gracefully', () => {
       const input = 'invalid-color';
-      expect(() => ColorConverter.convert(input)).toThrow('Invalid color format or value');
+      expect(() => ColorConverter.convert(input)).toThrow('Invalid color format');
     });
 
     test('should validate input', () => {
-      expect(() => ColorConverter.convert('')).toThrow('Invalid color format or value');
+      expect(() => ColorConverter.convert('')).toThrow('input must be a non-empty string');
     });
   });
 

@@ -162,7 +162,7 @@ describe('MCP Server Handler Functions', () => {
       const response = JSON.parse(result.content[0].text);
       
       expect(response.success).toBe(false);
-      expect(response.error).toContain('Invalid color format or value');
+      expect(response.error).toContain('Invalid color format');
       expect(response.hint).toContain('Please provide a valid color');
     });
 

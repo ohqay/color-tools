@@ -346,3 +346,101 @@ export async function safeExecuteAsync<T>(
     return fallback;
   }
 }
+
+// Specialized error types for better categorization
+export class ValidationError extends ColorError {
+  constructor(message: string, context?: ColorErrorContext) {
+    super(ColorErrorCode.INVALID_COLOR_VALUE, message, context, true);
+    this.name = 'ValidationError';
+  }
+}
+
+export class ConversionError extends ColorError {
+  constructor(message: string, context?: ColorErrorContext) {
+    super(ColorErrorCode.CONVERSION_FAILED, message, context, true);
+    this.name = 'ConversionError';
+  }
+}
+
+export class FormatError extends ColorError {
+  constructor(message: string, context?: ColorErrorContext) {
+    super(ColorErrorCode.INVALID_COLOR_FORMAT, message, context, true);
+    this.name = 'FormatError';
+  }
+}
+
+export class RangeError extends ColorError {
+  constructor(message: string, context?: ColorErrorContext) {
+    super(ColorErrorCode.OUT_OF_RANGE_VALUE, message, context, true);
+    this.name = 'RangeError';
+  }
+}
+
+export class ResourceError extends ColorError {
+  constructor(message: string, context?: ColorErrorContext) {
+    super(ColorErrorCode.RESOURCE_LOAD_FAILED, message, context, true);
+    this.name = 'ResourceError';
+  }
+}
+
+export class AccessibilityError extends ColorError {
+  constructor(message: string, context?: ColorErrorContext) {
+    super(ColorErrorCode.CONTRAST_CALCULATION_FAILED, message, context, true);
+    this.name = 'AccessibilityError';
+  }
+}
+
+export class HarmonyError extends ColorError {
+  constructor(message: string, context?: ColorErrorContext) {
+    super(ColorErrorCode.HARMONY_GENERATION_FAILED, message, context, true);
+    this.name = 'HarmonyError';
+  }
+}
+
+// Error validation helpers
+export function validateColorInput(input: unknown, paramName: string): string {
+  if (typeof input !== 'string' || !input.trim()) {
+    throw new ValidationError(
+      `${paramName} must be a non-empty string`,
+      { 
+        operation: 'validation',
+        input: String(input),
+        suggestions: [`Provide a valid color string for ${paramName}`]
+      }
+    );
+  }
+  return input.trim();
+}
+
+export function validateNumberInRange(
+  value: number,
+  min: number,
+  max: number,
+  paramName: string
+): number {
+  if (isNaN(value) || value < min || value > max) {
+    throw new RangeError(
+      `${paramName} must be between ${min} and ${max}, got ${value}`,
+      {
+        operation: 'validation',
+        expectedRange: { min, max },
+        metadata: { value, paramName }
+      }
+    );
+  }
+  return value;
+}
+
+export function validateFormat(format: string, supportedFormats: string[]): string {
+  if (!supportedFormats.includes(format)) {
+    throw new FormatError(
+      `Unsupported format: ${format}`,
+      {
+        format,
+        suggestions: [`Use one of: ${supportedFormats.join(', ')}`],
+        metadata: { supportedFormats }
+      }
+    );
+  }
+  return format;
+}

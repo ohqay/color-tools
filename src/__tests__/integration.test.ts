@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { ColorConverter } from '../colorConverter.js';
 
 describe('Color Converter Integration Tests', () => {
@@ -165,9 +165,9 @@ describe('Color Converter Integration Tests', () => {
     });
 
     it('should handle invalid inputs gracefully', () => {
-      expect(() => ColorConverter.convert('')).toThrow('Invalid color format or value');
-      expect(() => ColorConverter.convert('notacolor')).toThrow('Invalid color format or value');
-      expect(() => ColorConverter.convert('#GGGGGG')).toThrow('Invalid color format or value');
+      expect(() => ColorConverter.convert('')).toThrow('input must be a non-empty string');
+      expect(() => ColorConverter.convert('notacolor')).toThrow('Invalid color format');
+      expect(() => ColorConverter.convert('#GGGGGG')).toThrow('Invalid color format');
       expect(() => ColorConverter.convert('rgb(256, 0, 0)')).toThrow('RGB values must be between 0 and 255');
       expect(() => ColorConverter.convert('hsl(361, 100%, 50%)')).toThrow('Hue must be between 0 and 360');
     });

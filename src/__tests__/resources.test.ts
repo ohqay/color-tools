@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { getAllPalettes, getPalette, materialDesignPalette, tailwindPalette } from '../resources/palettes';
 import { webSafeColors, webSafeColorsResource, webSafeColorGroups } from '../resources/webSafeColors';
 import { namedColorsResource, namedColorCategories } from '../resources/namedColorsCategories';

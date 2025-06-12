@@ -2,7 +2,7 @@
  * Performance benchmark tests for optimized color conversion algorithms
  */
 
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach } from 'bun:test';
 import { ColorConverter } from '../colorConverter.js';
 import { getPalette, clearPaletteCache } from '../resources/palettes.js';
 

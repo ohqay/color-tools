@@ -34,13 +34,13 @@ class GammaLookupTable {
   applyGammaCorrection(value: number): number {
     const clampedValue = Math.max(0, Math.min(1, value));
     const index = Math.floor(clampedValue * (this.tableSize - 1));
-    return this.forwardTable[index];
+    return this.forwardTable[index]!;
   }
 
   removeGammaCorrection(value: number): number {
     const clampedValue = Math.max(0, Math.min(1, value));
     const index = Math.floor(clampedValue * (this.tableSize - 1));
-    return this.inverseTable[index];
+    return this.inverseTable[index]!;
   }
 }
 
@@ -76,13 +76,13 @@ class LabLookupTable {
   labFunction(t: number): number {
     const clampedValue = Math.max(0, Math.min(1, t));
     const index = Math.floor(clampedValue * (this.tableSize - 1));
-    return this.forwardTable[index];
+    return this.forwardTable[index]!;
   }
 
   inverseLabFunction(t: number): number {
     const clampedValue = Math.max(0, Math.min(1, t));
     const index = Math.floor(clampedValue * (this.tableSize - 1));
-    return this.inverseTable[index];
+    return this.inverseTable[index]!;
   }
 }
 
@@ -110,13 +110,13 @@ class TrigLookupTable {
   sin(degrees: number): number {
     const normalizedDegrees = ((degrees % 360) + 360) % 360;
     const index = Math.floor(normalizedDegrees / this.degreesPerStep);
-    return this.sinTable[Math.min(index, this.tableSize - 1)];
+    return this.sinTable[Math.min(index, this.tableSize - 1)]!;
   }
 
   cos(degrees: number): number {
     const normalizedDegrees = ((degrees % 360) + 360) % 360;
     const index = Math.floor(normalizedDegrees / this.degreesPerStep);
-    return this.cosTable[Math.min(index, this.tableSize - 1)];
+    return this.cosTable[Math.min(index, this.tableSize - 1)]!;
   }
 }
 

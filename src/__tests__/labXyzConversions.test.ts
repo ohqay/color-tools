@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { ColorConverter } from '../colorConverter.js';
 
 describe('LAB and XYZ Color Conversions', () => {
@@ -214,13 +214,13 @@ describe('LAB and XYZ Color Conversions', () => {
     });
 
     it('should throw error for L value out of range', () => {
-      expect(() => ColorConverter.parseLABString('lab(101%, 0, 0)')).toThrow('LAB L* value must be between 0 and 100');
-      expect(() => ColorConverter.parseLABString('lab(-1%, 0, 0)')).toThrow('LAB L* value must be between 0 and 100');
+      expect(() => ColorConverter.parseLABString('lab(101%, 0, 0)')).toThrow('LAB L* must be between 0 and 100');
+      expect(() => ColorConverter.parseLABString('lab(-1%, 0, 0)')).toThrow('LAB L* must be between 0 and 100');
     });
 
     it('should throw error for extreme a/b values', () => {
-      expect(() => ColorConverter.parseLABString('lab(50%, 129, 0)')).toThrow('LAB a* and b* values typically range from -128 to 127');
-      expect(() => ColorConverter.parseLABString('lab(50%, 0, -129)')).toThrow('LAB a* and b* values typically range from -128 to 127');
+      expect(() => ColorConverter.parseLABString('lab(50%, 129, 0)')).toThrow('LAB a* must be between -128 and 128');
+      expect(() => ColorConverter.parseLABString('lab(50%, 0, -129)')).toThrow('LAB b* must be between -128 and 128');
     });
 
     it('should return null for invalid format', () => {

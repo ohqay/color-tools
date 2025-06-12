@@ -13,6 +13,14 @@ import type { ColorFormat } from './types.js';
 import type { HarmonyType, HarmonyOptions } from './colorHarmony.js';
 import type { ColorBlindnessType } from './colorBlindness.js';
 import { performanceMonitor, measureTime } from './core/monitoring/PerformanceMonitor.js';
+import { 
+  ColorError, 
+  ColorErrorFactory,
+  ColorErrorCode, 
+  errorHandler,
+  safeExecute,
+  safeExecuteAsync 
+} from './core/errors/ColorError.js';
 
 // Type definitions for better type safety
 interface ColorBlindnessSimulationData {
@@ -80,16 +88,37 @@ const getHarmonyDescription = (harmonyType: HarmonyType): string => harmonyDescr
 
 const formatJSON = (obj: unknown): string => JSON.stringify(obj, null, JSON_INDENT);
 
-const createErrorResponse = (error: unknown, hint: string) => ({
-  content: [{
-    type: 'text' as const,
-    text: formatJSON({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-      hint,
-    }),
-  }],
-});
+const createErrorResponse = (error: unknown, hint: string) => {
+  // Handle ColorError instances specially
+  if (error instanceof ColorError) {
+    errorHandler.handle(error);
+    return {
+      content: [{
+        type: 'text' as const,
+        text: formatJSON({
+          success: false,
+          error: error.message,
+          errorCode: error.code,
+          context: error.context,
+          hint: error.context.suggestions?.join(' ') || hint,
+          recoverable: error.recoverable
+        }),
+      }],
+    };
+  }
+  
+  // Handle regular errors
+  return {
+    content: [{
+      type: 'text' as const,
+      text: formatJSON({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        hint,
+      }),
+    }],
+  };
+};
 
 const createSuccessResponse = (data: unknown) => ({
   content: [{
@@ -98,11 +127,15 @@ const createSuccessResponse = (data: unknown) => ({
   }],
 });
 
-// Validation helpers
+// Import validation helper from error module
+import { validateColorInput as validateColor } from './core/errors/ColorError.js';
+
+// Wrapper for MCP-specific validation
 const validateColorInput = (color: string | undefined, fieldName: string): void => {
   if (!color || typeof color !== 'string') {
-    throw new Error(`${fieldName} is required`);
+    throw ColorErrorFactory.missingParameter(fieldName, 'color-operation');
   }
+  validateColor(color, fieldName);
 };
 
 // Lazy loaders
@@ -404,13 +437,23 @@ const handleConvertcolor = async (args: unknown) => {
   validateColorInput(input, 'Input color value');
   
   const { result, duration } = measureTime(() => {
-    return ColorConverter.convert(input, from, to);
+    try {
+      return ColorConverter.convert(input, from, to);
+    } catch (error) {
+      // Re-throw ColorError instances to preserve context
+      if (error instanceof ColorError) throw error;
+      throw ColorErrorFactory.conversionFailed(
+        from || 'auto-detected',
+        to?.join(', ') || 'all formats',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
   });
   
   // Record performance metrics
   performanceMonitor.recordOperation('convert-color', duration, {
-    inputFormat: from,
-    outputFormats: to,
+    inputFormat: from ?? undefined,
+    outputFormats: to ?? undefined,
     cacheHit: false // Basic assumption, could be enhanced with actual cache hit detection
   });
   
@@ -419,7 +462,7 @@ const handleConvertcolor = async (args: unknown) => {
   // Add detected format if not specified
   if (!from) {
     const detectedFormat = ColorConverter.detectFormat(input);
-    if (detectedFormat) {response.detectedFormat = detectedFormat;}
+    if (detectedFormat) {response['detectedFormat'] = detectedFormat;}
   }
   
   // Efficiently copy results without multiple property checks
@@ -437,15 +480,25 @@ const handleGenerateHarmony = async (args: unknown) => {
   };
   
   validateColorInput(baseColor, 'Base color');
-  if (!harmonyType) {throw new Error('Harmony type is required');}
+  if (!harmonyType) {
+    throw ColorErrorFactory.missingParameter('harmonyType', 'generate-harmony');
+  }
   
   const ColorHarmonyClass = await loadColorHarmony();
-  const result = ColorHarmonyClass.generateHarmony(
-    baseColor,
-    harmonyType,
-    outputFormat ?? 'hex',
-    options ?? {}
+  const result = await safeExecuteAsync(
+    async () => ColorHarmonyClass.generateHarmony(
+      baseColor,
+      harmonyType,
+      outputFormat ?? 'hex',
+      options ?? {}
+    ),
+    undefined,
+    { operation: 'generateHarmony', input: baseColor, format: harmonyType }
   );
+  
+  if (!result) {
+    throw ColorErrorFactory.harmonyGenerationFailed(baseColor, harmonyType, 'Failed to generate harmony');
+  }
   
   const response = {
     success: true,
@@ -477,7 +530,19 @@ const handleCheckContrast = async (args: unknown) => {
   validateColorInput(background, 'Background color');
   
   const { checkContrast: checkContrastFn } = await loadAccessibilityFunctions();
-  const result = checkContrastFn(foreground, background);
+  const result = await safeExecuteAsync(
+    async () => checkContrastFn(foreground, background),
+    undefined,
+    { operation: 'checkContrast', input: `${foreground} vs ${background}` }
+  );
+  
+  if (!result) {
+    throw new ColorError(
+      'CONTRAST_CALCULATION_FAILED',
+      'Failed to calculate contrast ratio',
+      { operation: 'checkContrast', metadata: { foreground, background } }
+    );
+  }
   
   const response = {
     success: true,
@@ -517,8 +582,24 @@ const handleSimulateColorblind = async (args: unknown) => {
   
   const { simulateColorBlindness: simulateFn, simulateAllColorBlindness: simulateAllFn, colorBlindnessInfo: infoMap } = await loadColorBlindnessFunctions();
   
+  const executeSimulation = async <T>(fn: () => T): Promise<T> => {
+    const result = await safeExecuteAsync(
+      async () => fn(),
+      undefined,
+      { operation: 'simulateColorBlindness', input: color }
+    );
+    if (!result) {
+      throw new ColorError(
+        'CONVERSION_FAILED',
+        'Failed to simulate color blindness',
+        { operation: 'simulateColorBlindness', input: color, metadata: { type } }
+      );
+    }
+    return result;
+  };
+  
   if (type) {
-    const simulated = simulateFn(color, type);
+    const simulated = await executeSimulation(() => simulateFn(color, type));
     const info = infoMap[type];
     
     const response = {
@@ -540,7 +621,7 @@ const handleSimulateColorblind = async (args: unknown) => {
     
     return createSuccessResponse(response);
   } else {
-    const allSimulations = simulateAllFn(color);
+    const allSimulations = await executeSimulation(() => simulateAllFn(color));
     
     const response = {
       success: true,
@@ -579,13 +660,29 @@ const handleFindAccessibleColor = async (args: unknown) => {
   validateColorInput(backgroundColor, 'Background color');
   
   const { findAccessibleColor: findFn, suggestAccessiblePairs: suggestFn } = await loadAccessibilityFunctions();
-  const result = findFn(targetColor, backgroundColor, options);
+  const result = await safeExecuteAsync(
+    async () => findFn(targetColor, backgroundColor, options),
+    undefined,
+    { operation: 'findAccessibleColor', input: targetColor }
+  );
   
   if (!result) {
-    throw new Error('Could not find an accessible color alternative');
+    throw new ColorError(
+      'COLOR_NOT_FOUND',
+      'Could not find an accessible color alternative',
+      { 
+        operation: 'findAccessibleColor',
+        input: targetColor,
+        metadata: { backgroundColor, options }
+      }
+    );
   }
   
-  const suggestions = suggestFn(targetColor, 3);
+  const suggestions = await safeExecuteAsync(
+    async () => suggestFn(targetColor, 3),
+    [],
+    { operation: 'suggestAccessiblePairs', input: targetColor }
+  ) || [];
   
   const response = {
     success: true,
@@ -633,12 +730,24 @@ const handleMixColors = async (args: unknown) => {
   validateColorInput(color1, 'First color');
   validateColorInput(color2, 'Second color');
   
-  const result = ColorConverter.mixColors(
-    color1,
-    color2,
-    ratio ?? 0.5,
-    mode ?? 'normal'
+  const result = safeExecute(
+    () => ColorConverter.mixColors(
+      color1,
+      color2,
+      ratio ?? 0.5,
+      mode ?? 'normal'
+    ),
+    undefined,
+    { operation: 'mixColors', input: `${color1} + ${color2}` }
   );
+  
+  if (!result) {
+    throw ColorErrorFactory.conversionFailed(
+      'color mixing',
+      'mixed result',
+      'Failed to mix colors'
+    );
+  }
   
   const response: Record<string, unknown> = {
     success: true,
@@ -650,7 +759,7 @@ const handleMixColors = async (args: unknown) => {
   };
   
   // Add specific format or all formats
-  response.result = outputFormat ? result[outputFormat] : { ...result };
+  response['result'] = outputFormat ? result[outputFormat] : { ...result };
   
   return createSuccessResponse(response);
 };
@@ -663,7 +772,9 @@ const handleConvertTailwindColor = async (args: unknown) => {
   };
   
   validateColorInput(input, 'Input');
-  if (!operation) {throw new Error('Operation is required');}
+  if (!operation) {
+    throw ColorErrorFactory.missingParameter('operation', 'convert-tailwind-color');
+  }
   
   const { getTailwindV4Color: getColorFn, findTailwindV4ColorByHex: findByHexFn, searchTailwindV4Colors: searchFn, findTailwindV4ColorByHexWithSimilar: findSimilarFn } = await loadTailwindV4Functions();
   
@@ -683,15 +794,23 @@ const handleConvertTailwindColor = async (args: unknown) => {
       
       const color = getColorFn(colorName);
       if (!color) {
-        throw new Error(`Tailwind color not found: ${colorName}`);
+        throw ColorErrorFactory.colorNotFound(colorName, 'Tailwind V4');
       }
       
       const colorShade = color.shades.find((s: { name: string; value: string }) => s.name === shade);
       if (!colorShade) {
-        throw new Error(`Shade ${shade} not found for color ${colorName}`);
+        throw new ColorError(
+          'COLOR_NOT_FOUND',
+          `Shade ${shade} not found for color ${colorName}`,
+          {
+            operation: 'convert-tailwind-color',
+            input: `${colorName}-${shade}`,
+            suggestions: color.shades.map((s: { name: string }) => `Try ${colorName}-${s.name}`)
+          }
+        );
       }
       
-      response.result = {
+      response['result'] = {
         tailwindName: `${colorName}-${shade}`,
         colorName,
         shade,
@@ -701,7 +820,7 @@ const handleConvertTailwindColor = async (args: unknown) => {
       // Convert to other formats if requested
       if (outputFormat && outputFormat !== 'hex') {
         const converted = ColorConverter.convert(colorShade.value, 'hex', [outputFormat]);
-        response.result.convertedValue = converted[outputFormat];
+        response['result']['convertedValue'] = converted[outputFormat];
       }
       break;
     }
@@ -710,10 +829,10 @@ const handleConvertTailwindColor = async (args: unknown) => {
       const colorName = input.toLowerCase();
       const color = getColorFn(colorName);
       if (!color) {
-        throw new Error(`Tailwind color not found: ${colorName}`);
+        throw ColorErrorFactory.colorNotFound(colorName, 'Tailwind V4');
       }
       
-      response.result = {
+      response['result'] = {
         colorName,
         shades: color.shades.map((shade: { name: string; value: string }) => ({
           name: shade.name,
@@ -732,10 +851,18 @@ const handleConvertTailwindColor = async (args: unknown) => {
       const result = findByHexFn(input);
       if (!result) {
         // If no exact match, provide helpful message with suggestion to use find-similar
-        throw new Error(`No exact Tailwind color match found for hex value: ${input}. Use 'find-similar' operation to find closest matches.`);
+        throw new ColorError(
+          'COLOR_NOT_FOUND',
+          `No exact Tailwind color match found for hex value: ${input}`,
+          {
+            operation: 'convert-tailwind-color',
+            input,
+            suggestions: ['Use "find-similar" operation to find closest matches']
+          }
+        );
       }
       
-      response.result = {
+      response['result'] = {
         hexValue: input,
         tailwindName: `${result.color}-${result.shade}`,
         colorName: result.color,
@@ -750,7 +877,7 @@ const handleConvertTailwindColor = async (args: unknown) => {
       const searchResult = findSimilarFn(input, 5); // Get top 5 matches
       
       if (searchResult.exactMatch && searchResult.result) {
-        response.result = {
+        response['result'] = {
           hexValue: input,
           exactMatch: true,
           tailwindName: `${searchResult.result.color}-${searchResult.result.shade}`,
@@ -758,7 +885,7 @@ const handleConvertTailwindColor = async (args: unknown) => {
           shade: searchResult.result.shade,
         };
       } else {
-        response.result = {
+        response['result'] = {
           hexValue: input,
           exactMatch: false,
           closestMatches: searchResult.closestMatches?.map((match: { color: string; shade: string; value: string; distance: number }) => ({
@@ -780,10 +907,10 @@ const handleConvertTailwindColor = async (args: unknown) => {
       // Search for colors by name
       const results = searchFn(input);
       if (results.length === 0) {
-        throw new Error(`No Tailwind colors found matching: ${input}`);
+        throw ColorErrorFactory.colorNotFound(input, 'Tailwind V4 search results');
       }
       
-      response.result = {
+      response['result'] = {
         query: input,
         matches: results.slice(0, 20).map((result: { color: string; shade: string; value: string }) => ({ // Limit to 20 results
           tailwindName: `${result.color}-${result.shade}`,
@@ -800,7 +927,15 @@ const handleConvertTailwindColor = async (args: unknown) => {
     }
     
     default:
-      throw new Error(`Unknown operation: ${operation}`);
+      throw new ColorError(
+        'UNSUPPORTED_FORMAT',
+        `Unknown operation: ${operation}`,
+        {
+          operation: 'convert-tailwind-color',
+          format: operation,
+          suggestions: ['Use one of: to-hex, from-hex, search, get-color, get-all-shades, find-similar']
+        }
+      );
   }
   
   return createSuccessResponse(response);
@@ -1056,7 +1191,12 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
         const palette = getPaletteFn(paletteName);
         
         if (!palette) {
-          throw new Error(`Palette not found: ${paletteName}`);
+          throw ColorErrorFactory.paletteNotFound(
+            paletteName,
+            await loadPaletteFunctions().then(({ getAllPalettes }) => 
+              getAllPalettes().map((p: { name: string }) => p.name.toLowerCase().replace(/\s+/g, '-'))
+            )
+          );
         }
         content = formatJSON(palette);
       }
@@ -1072,7 +1212,18 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       content = formatJSON(webSafeColors);
     }
     else {
-      throw new Error(`Unknown resource: ${uri}`);
+      throw new ColorError(
+        'RESOURCE_LOAD_FAILED',
+        `Unknown resource: ${uri}`,
+        {
+          operation: 'readResource',
+          input: uri,
+          suggestions: [
+            'Use one of the available resource URIs',
+            'Check the resource list with ListResources'
+          ]
+        }
+      );
     }
 
     // Cache the result
@@ -1088,7 +1239,16 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       ],
     };
   } catch (error) {
-    throw new Error(`Failed to read resource ${uri}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    if (error instanceof ColorError) throw error;
+    throw new ColorError(
+      'RESOURCE_LOAD_FAILED',
+      `Failed to read resource ${uri}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      {
+        operation: 'readResource',
+        input: uri,
+        metadata: { error: error instanceof Error ? error.message : String(error) }
+      }
+    );
   }
 });
 

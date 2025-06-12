@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { ColorConverter } from '../colorConverter.js';
 
 describe('ColorConverter', () => {
@@ -215,16 +215,16 @@ describe('ColorConverter', () => {
     });
 
     it('should throw error for invalid alpha values', () => {
-      expect(() => ColorConverter.parseRGBAString('rgba(255, 0, 0, 1.5)')).toThrow('Alpha value must be between 0 and 1');
+      expect(() => ColorConverter.parseRGBAString('rgba(255, 0, 0, 1.5)')).toThrow('Alpha channel must be between 0 and 1');
     });
 
     it('should throw error for negative alpha values', () => {
-      expect(() => ColorConverter.parseRGBAString('rgba(255, 0, 0, -0.1)')).toThrow('Alpha value must be between 0 and 1');
+      expect(() => ColorConverter.parseRGBAString('rgba(255, 0, 0, -0.1)')).toThrow('Alpha channel must be between 0 and 1');
     });
 
     it('should throw error for invalid RGB values in RGBA', () => {
-      expect(() => ColorConverter.parseRGBAString('rgba(256, 0, 0, 0.5)')).toThrow('RGB values must be between 0 and 255');
-      expect(() => ColorConverter.parseRGBAString('rgba(0, -1, 0, 0.5)')).toThrow('RGB values must be between 0 and 255');
+      expect(() => ColorConverter.parseRGBAString('rgba(256, 0, 0, 0.5)')).toThrow('Red channel must be between 0 and 255');
+      expect(() => ColorConverter.parseRGBAString('rgba(0, -1, 0, 0.5)')).toThrow('Green channel must be between 0 and 255');
     });
   });
 
@@ -273,7 +273,7 @@ describe('ColorConverter', () => {
 
     it('should throw error for invalid HSB values', () => {
       expect(() => ColorConverter.parseHSBString('hsb(361, 50%, 50%)')).toThrow('Hue must be between 0 and 360');
-      expect(() => ColorConverter.parseHSBString('hsb(180, 101%, 50%)')).toThrow('Saturation and Brightness must be between 0 and 100');
+      expect(() => ColorConverter.parseHSBString('hsb(180, 101%, 50%)')).toThrow('Saturation must be between 0 and 100');
     });
   });
 
@@ -285,11 +285,11 @@ describe('ColorConverter', () => {
     });
 
     it('should throw error for invalid CMYK values', () => {
-      expect(() => ColorConverter.parseCMYKString('cmyk(101%, 0%, 0%, 0%)')).toThrow('CMYK values must be between 0 and 100');
+      expect(() => ColorConverter.parseCMYKString('cmyk(101%, 0%, 0%, 0%)')).toThrow('Cyan must be between 0 and 100');
     });
 
     it('should throw error for negative CMYK values', () => {
-      expect(() => ColorConverter.parseCMYKString('cmyk(-1%, 0%, 0%, 0%)')).toThrow('CMYK values must be between 0 and 100');
+      expect(() => ColorConverter.parseCMYKString('cmyk(-1%, 0%, 0%, 0%)')).toThrow('Cyan must be between 0 and 100');
     });
   });
 
@@ -340,10 +340,10 @@ describe('ColorConverter', () => {
       expect(ColorConverter.parseToRGB('hsl(0, 100%, 50%)')).toEqual({ r: 255, g: 0, b: 0 });
     });
 
-    it('should return null for unsupported format in parseToRGB', () => {
+    it('should throw error for unsupported format in parseToRGB', () => {
       // Force a format that doesn't match to trigger the default case
       // Use an invalid format that won't be detected
-      expect(ColorConverter.parseToRGB('#FF0000', 'unknown' as any)).toBeNull();
+      expect(() => ColorConverter.parseToRGB('#FF0000', 'unknown' as any)).toThrow('Unsupported color format');
     });
   });
 
@@ -382,7 +382,7 @@ describe('ColorConverter', () => {
     });
 
     it('should throw error for invalid input', () => {
-      expect(() => ColorConverter.convert('invalid')).toThrow('Invalid color format or value');
+      expect(() => ColorConverter.convert('invalid')).toThrow('Invalid color format');
     });
 
     it('should set hsv same as hsb', () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, mock, spyOn } from 'bun:test';
 import { findAccessibleColor } from '../colorAccessibility.js';
 import { findColorBlindSafeAlternative, generateColorBlindSafePalette } from '../colorBlindness.js';
 import { ColorConverter } from '../colorConverter.js';
@@ -42,7 +42,8 @@ describe('Edge Cases for 100% Coverage', () => {
   describe('Color Blindness Edge Cases', () => {
     it('should handle invalid color input in findColorBlindSafeAlternative', () => {
       // Mock parseToRGB to return null for invalid input
-      vi.spyOn(ColorConverter, 'parseToRGB').mockReturnValueOnce(null);
+      const originalParseToRGB = ColorConverter.parseToRGB;
+      ColorConverter.parseToRGB = mock(() => null);
       
       const result = findColorBlindSafeAlternative(
         'invalid-color',
@@ -54,25 +55,17 @@ describe('Edge Cases for 100% Coverage', () => {
       expect(result).toBeDefined();
       
       // Restore the original function
-      vi.restoreAllMocks();
+      ColorConverter.parseToRGB = originalParseToRGB;
     });
 
     it('should handle invalid base color in generateColorBlindSafePalette', () => {
-      // Mock parseToRGB to return null for the first base color
-      const mockParseToRGB = vi.spyOn(ColorConverter, 'parseToRGB');
-      mockParseToRGB.mockReturnValueOnce(null); // First call returns null
-      mockParseToRGB.mockReturnValue({ r: 255, g: 0, b: 0 }); // Subsequent calls return red
-      
-      const result = generateColorBlindSafePalette(
-        ['invalid-color'],
-        3
-      );
-      
-      // Should handle the null case gracefully
-      expect(result).toBeDefined();
-      
-      // Restore the original function
-      vi.restoreAllMocks();
+      // Test with an invalid color that will throw an error
+      expect(() => {
+        generateColorBlindSafePalette(
+          ['invalid-color'],
+          3
+        );
+      }).toThrow('Failed to parse first base color');
     });
 
     it('should test color blindness with edge case RGB values', () => {
@@ -125,8 +118,11 @@ describe('Edge Cases for 100% Coverage', () => {
     });
 
     it('should test edge cases in detectFormat', () => {
+      // Test empty string throws error
+      expect(() => ColorConverter.detectFormat('')).toThrow('input must be a non-empty string');
+      
+      // Test other edge cases
       const edgeCases = [
-        '',
         'invalid',
         '#',
         'rgb',
@@ -140,7 +136,7 @@ describe('Edge Cases for 100% Coverage', () => {
       edgeCases.forEach(testCase => {
         const result = ColorConverter.detectFormat(testCase);
         // Most should return null for invalid formats
-        if (!testCase || testCase.length < 3) {
+        if (testCase.length < 3 || testCase === 'invalid') {
           expect(result).toBeNull();
         }
       });
@@ -161,7 +157,7 @@ describe('Edge Cases for 100% Coverage', () => {
       // Test with invalid base color
       expect(() => {
         ColorHarmony.generateHarmony('invalid-color', 'complementary', 'hex', {});
-      }).toThrow();
+      }).toThrow('Invalid color format');
     });
   });
 

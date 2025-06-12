@@ -16,5 +16,6 @@ exclude = [
   "examples/**",
   "**/*.js",
   "**/*.d.ts",
-  "**/*.config.*"
+  "**/*.config.*",
+  "**/mcp-server.integration.test.ts"
 ]

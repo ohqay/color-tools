@@ -1,5 +1,11 @@
 import type { HSL, ColorFormat } from './types.js';
 import { ColorConverter } from './colorConverter.js';
+import { 
+  ColorError, 
+  HarmonyError, 
+  ValidationError,
+  validateColorInput
+} from './core/errors/ColorError.js';
 
 export type HarmonyType = 
   | 'complementary' 
@@ -41,34 +47,65 @@ export class ColorHarmony {
    * Convert a color to HSL for harmony calculations
    */
   private static toHSL(input: string): HSL {
-    const rgb = ColorConverter.parseToRGB(input);
-    if (!rgb) {
-      throw new Error('Invalid color format');
+    try {
+      validateColorInput(input, 'input');
+      const rgb = ColorConverter.parseToRGB(input);
+      if (!rgb) {
+        throw new HarmonyError(
+          'Failed to parse color for harmony generation',
+          { 
+            operation: 'toHSL',
+            input,
+            suggestions: ['Provide a valid color in any supported format']
+          }
+        );
+      }
+      return ColorConverter.rgbToHSL(rgb);
+    } catch (error) {
+      if (error instanceof ColorError) throw error;
+      throw new HarmonyError(
+        `Failed to convert color to HSL: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { operation: 'toHSL', input }
+      );
     }
-    return ColorConverter.rgbToHSL(rgb);
   }
 
   /**
    * Format HSL values to the desired output format
    */
   private static formatColor(hsl: HSL, format: ColorFormat): string {
-    const rgb = ColorConverter.hslToRGB(hsl);
-    const result = ColorConverter.convert(ColorConverter.formatRGB(rgb), 'rgb', [format]);
-    
-    switch (format) {
-      case 'hex':
-        return result.hex ?? '';
-      case 'rgb':
-        return result.rgb ?? '';
-      case 'hsl':
-        return result.hsl ?? '';
-      case 'hsb':
-      case 'hsv':
-        return result.hsb ?? '';
-      case 'cmyk':
-        return result.cmyk ?? '';
-      default:
-        return result.hex ?? '';
+    try {
+      const rgb = ColorConverter.hslToRGB(hsl);
+      const result = ColorConverter.convert(ColorConverter.formatRGB(rgb), 'rgb', [format]);
+      
+      switch (format) {
+        case 'hex':
+          return result.hex ?? '';
+        case 'rgb':
+          return result.rgb ?? '';
+        case 'hsl':
+          return result.hsl ?? '';
+        case 'hsb':
+        case 'hsv':
+          return result.hsb ?? '';
+        case 'cmyk':
+          return result.cmyk ?? '';
+        case 'lab':
+          return result.lab ?? '';
+        case 'xyz':
+          return result.xyz ?? '';
+        default:
+          return result.hex ?? '';
+      }
+    } catch (error) {
+      throw new HarmonyError(
+        `Failed to format color: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { 
+          operation: 'formatColor',
+          format,
+          metadata: { hsl }
+        }
+      );
     }
   }
 
@@ -268,7 +305,16 @@ export class ColorHarmony {
       case 'double-complementary':
         return this.generateDoubleComplementary(baseColor, outputFormat, options);
       default:
-        throw new Error(`Unknown harmony type: ${harmonyType}`);
+        throw new ValidationError(
+          `Unknown harmony type: ${harmonyType}`,
+          {
+            operation: 'generateHarmony',
+            metadata: { harmonyType },
+            suggestions: [
+              'Use one of: complementary, analogous, triadic, tetradic, square, split-complementary, double-complementary'
+            ]
+          }
+        );
     }
   }
 
@@ -280,21 +326,45 @@ export class ColorHarmony {
     outputFormat: ColorFormat = 'hex',
     options: HarmonyOptions = {}
   ): Record<HarmonyType, HarmonyResult> {
-    const harmonyTypes: HarmonyType[] = [
-      'complementary',
-      'analogous',
-      'triadic',
-      'tetradic',
-      'split-complementary',
-      'double-complementary'
-    ];
+    try {
+      validateColorInput(baseColor, 'baseColor');
+      
+      const harmonyTypes: HarmonyType[] = [
+        'complementary',
+        'analogous',
+        'triadic',
+        'tetradic',
+        'split-complementary',
+        'double-complementary'
+      ];
 
-    const results: Record<string, HarmonyResult> = {};
-    
-    for (const type of harmonyTypes) {
-      results[type] = this.generateHarmony(baseColor, type, outputFormat, options);
+      const results: Record<string, HarmonyResult> = {};
+      
+      for (const type of harmonyTypes) {
+        try {
+          results[type] = this.generateHarmony(baseColor, type, outputFormat, options);
+        } catch (error) {
+          // Log individual harmony errors but continue with others
+          console.error(`Failed to generate ${type} harmony:`, error);
+          results[type] = {
+            type,
+            baseColor,
+            colors: [],
+            rawValues: []
+          };
+        }
+      }
+      
+      return results as Record<HarmonyType, HarmonyResult>;
+    } catch (error) {
+      throw new HarmonyError(
+        `Failed to generate all harmonies: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { 
+          operation: 'generateAllHarmonies',
+          input: baseColor,
+          metadata: { outputFormat, options }
+        }
+      );
     }
-    
-    return results as Record<HarmonyType, HarmonyResult>;
   }
 }

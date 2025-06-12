@@ -1,5 +1,11 @@
 import type { RGB } from './types.js';
 import { ColorConverter } from './colorConverter.js';
+import { 
+  ColorError,
+  ConversionError,
+  ValidationError,
+  validateNumberInRange
+} from './core/errors/ColorError.js';
 
 /**
  * Color Blindness Types and Transformation Matrices
@@ -196,9 +202,14 @@ export function simulateColorBlindness(
   const linearB = linearizeRgbChannel(rgb.b);
 
   // Apply the transformation matrix
-  const transformedR = matrix[0][0] * linearR + matrix[0][1] * linearG + matrix[0][2] * linearB;
-  const transformedG = matrix[1][0] * linearR + matrix[1][1] * linearG + matrix[1][2] * linearB;
-  const transformedB = matrix[2][0] * linearR + matrix[2][1] * linearG + matrix[2][2] * linearB;
+  // We know these indices exist because we define the matrices with fixed 3x3 structure
+  const row0 = matrix[0]!;
+  const row1 = matrix[1]!;
+  const row2 = matrix[2]!;
+  
+  const transformedR = row0[0]! * linearR + row0[1]! * linearG + row0[2]! * linearB;
+  const transformedG = row1[0]! * linearR + row1[1]! * linearG + row1[2]! * linearB;
+  const transformedB = row2[0]! * linearR + row2[1]! * linearG + row2[2]! * linearB;
 
   // Delinearize and clamp values
   return {
@@ -318,14 +329,44 @@ export function generateColorBlindSafePalette(
   baseColors: (string | RGB)[],
   count = 5
 ): RGB[] {
-  const palette: RGB[] = [];
-  const types: ColorBlindnessType[] = ['protanopia', 'deuteranopia', 'tritanopia'];
+  try {
+    // Validate inputs
+    validateNumberInRange(count, 1, 20, 'count');
+    
+    if (!Array.isArray(baseColors) || baseColors.length === 0) {
+      throw new ValidationError(
+        'Base colors must be a non-empty array',
+        { operation: 'generateColorBlindSafePalette' }
+      );
+    }
+    
+    const palette: RGB[] = [];
+    const types: ColorBlindnessType[] = ['protanopia', 'deuteranopia', 'tritanopia'];
 
-  // Start with the first base color
-  const firstColor = typeof baseColors[0] === 'string'
-    ? ColorConverter.parseToRGB(baseColors[0]) ?? { r: 0, g: 0, b: 0 }
-    : baseColors[0];
-  palette.push(firstColor);
+    // Start with the first base color
+    const firstBase = baseColors[0];
+    if (!firstBase) {
+      throw new ValidationError(
+        'At least one base color is required',
+        { operation: 'generateColorBlindSafePalette' }
+      );
+    }
+  
+    const firstColor = typeof firstBase === 'string'
+      ? ColorConverter.parseToRGB(firstBase)
+      : firstBase;
+      
+    if (!firstColor) {
+      throw new ConversionError(
+        'Failed to parse first base color',
+        { 
+          operation: 'generateColorBlindSafePalette',
+          input: firstBase
+        }
+      );
+    }
+    
+    palette.push(firstColor);
 
   // Generate additional colors
   while (palette.length < count) {
@@ -381,5 +422,15 @@ export function generateColorBlindSafePalette(
     }
   }
 
-  return palette;
+    return palette;
+  } catch (error) {
+    if (error instanceof ColorError) throw error;
+    throw new ConversionError(
+      `Failed to generate color blind safe palette: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { 
+        operation: 'generateColorBlindSafePalette',
+        metadata: { baseColors: baseColors.length, count }
+      }
+    );
+  }
 }

@@ -1,5 +1,11 @@
 import type { RGB } from './types.js';
 import { ColorConverter } from './colorConverter.js';
+import { 
+  ColorError, 
+  AccessibilityError,
+  validateColorInput,
+  validateNumberInRange 
+} from './core/errors/ColorError.js';
 
 /**
  * WCAG 2.1 Contrast Ratio Standards
@@ -74,14 +80,33 @@ export function calculateContrastRatio(color1: RGB, color2: RGB): number {
  * Check if two colors meet WCAG accessibility standards
  */
 export function checkContrast(foreground: string | RGB, background: string | RGB): ContrastResult {
-  // Convert colors to RGB if needed
-  const fgRgb = typeof foreground === 'string' 
-    ? ColorConverter.parseToRGB(foreground) ?? { r: 0, g: 0, b: 0 }
-    : foreground;
-  
-  const bgRgb = typeof background === 'string'
-    ? ColorConverter.parseToRGB(background) ?? { r: 0, g: 0, b: 0 }
-    : background;
+  try {
+    // Validate inputs
+    if (typeof foreground === 'string') {
+      validateColorInput(foreground, 'foreground');
+    }
+    if (typeof background === 'string') {
+      validateColorInput(background, 'background');
+    }
+    
+    // Convert colors to RGB if needed
+    const fgRgb = typeof foreground === 'string' 
+      ? ColorConverter.parseToRGB(foreground)
+      : foreground;
+    
+    const bgRgb = typeof background === 'string'
+      ? ColorConverter.parseToRGB(background)
+      : background;
+      
+    if (!fgRgb || !bgRgb) {
+      throw new AccessibilityError(
+        'Failed to parse colors for contrast calculation',
+        { 
+          operation: 'checkContrast',
+          input: `foreground: ${foreground}, background: ${background}`
+        }
+      );
+    }
 
   const ratio = calculateContrastRatio(fgRgb, bgRgb);
 
@@ -117,6 +142,16 @@ export function checkContrast(foreground: string | RGB, background: string | RGB
   }
 
   return result;
+  } catch (error) {
+    if (error instanceof ColorError) throw error;
+    throw new AccessibilityError(
+      `Contrast calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { 
+        operation: 'checkContrast',
+        metadata: { foreground, background }
+      }
+    );
+  }
 }
 
 /**
@@ -128,20 +163,42 @@ export function findAccessibleColor(
   backgroundColor: string | RGB,
   options: AccessibilityOptions = {}
 ): { color: RGB; hex: string; contrast: number } | null {
-  const {
-    targetContrast = 4.5, // Default to AA standard for normal text
-    maintainHue = true,
-    preferDarker = null
-  } = options;
+  try {
+    const {
+      targetContrast = 4.5, // Default to AA standard for normal text
+      maintainHue = true,
+      preferDarker = null
+    } = options;
+    
+    // Validate target contrast
+    validateNumberInRange(targetContrast, 1, 21, 'targetContrast');
 
-  // Convert to RGB
-  const targetRgb = typeof targetColor === 'string'
-    ? ColorConverter.parseToRGB(targetColor) ?? { r: 0, g: 0, b: 0 }
-    : targetColor;
-  
-  const bgRgb = typeof backgroundColor === 'string'
-    ? ColorConverter.parseToRGB(backgroundColor) ?? { r: 0, g: 0, b: 0 }
-    : backgroundColor;
+    // Validate inputs
+    if (typeof targetColor === 'string') {
+      validateColorInput(targetColor, 'targetColor');
+    }
+    if (typeof backgroundColor === 'string') {
+      validateColorInput(backgroundColor, 'backgroundColor');
+    }
+
+    // Convert to RGB
+    const targetRgb = typeof targetColor === 'string'
+      ? ColorConverter.parseToRGB(targetColor)
+      : targetColor;
+    
+    const bgRgb = typeof backgroundColor === 'string'
+      ? ColorConverter.parseToRGB(backgroundColor)
+      : backgroundColor;
+      
+    if (!targetRgb || !bgRgb) {
+      throw new AccessibilityError(
+        'Failed to parse colors for accessible color calculation',
+        { 
+          operation: 'findAccessibleColor',
+          input: `targetColor: ${targetColor}, backgroundColor: ${backgroundColor}`
+        }
+      );
+    }
 
   // Check if current contrast is already sufficient
   const currentContrast = calculateContrastRatio(targetRgb, bgRgb);
@@ -234,6 +291,16 @@ export function findAccessibleColor(
   }
 
   return null;
+  } catch (error) {
+    if (error instanceof ColorError) throw error;
+    throw new AccessibilityError(
+      `Failed to find accessible color: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { 
+        operation: 'findAccessibleColor',
+        metadata: { targetColor, backgroundColor, options }
+      }
+    );
+  }
 }
 
 /**
@@ -244,15 +311,30 @@ export function getContrastReport(color: string | RGB): {
   black: ContrastResult;
   gray: ContrastResult;
 } {
-  const white: RGB = { r: 255, g: 255, b: 255 };
-  const black: RGB = { r: 0, g: 0, b: 0 };
-  const gray: RGB = { r: 128, g: 128, b: 128 };
+  try {
+    if (typeof color === 'string') {
+      validateColorInput(color, 'color');
+    }
+    
+    const white: RGB = { r: 255, g: 255, b: 255 };
+    const black: RGB = { r: 0, g: 0, b: 0 };
+    const gray: RGB = { r: 128, g: 128, b: 128 };
 
-  return {
-    white: checkContrast(color, white),
-    black: checkContrast(color, black),
-    gray: checkContrast(color, gray)
-  };
+    return {
+      white: checkContrast(color, white),
+      black: checkContrast(color, black),
+      gray: checkContrast(color, gray)
+    };
+  } catch (error) {
+    if (error instanceof ColorError) throw error;
+    throw new AccessibilityError(
+      `Failed to generate contrast report: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { 
+        operation: 'getContrastReport',
+        input: typeof color === 'string' ? color : JSON.stringify(color)
+      }
+    );
+  }
 }
 
 /**
@@ -264,9 +346,26 @@ export function suggestAccessiblePairs(baseColor: string | RGB, count = 5): {
   contrast: number;
   passes: ContrastResult['passes'];
 }[] {
-  const baseRgb = typeof baseColor === 'string'
-    ? ColorConverter.parseToRGB(baseColor) ?? { r: 0, g: 0, b: 0 }
-    : baseColor;
+  try {
+    validateNumberInRange(count, 1, 50, 'count');
+    
+    if (typeof baseColor === 'string') {
+      validateColorInput(baseColor, 'baseColor');
+    }
+    
+    const baseRgb = typeof baseColor === 'string'
+      ? ColorConverter.parseToRGB(baseColor)
+      : baseColor;
+      
+    if (!baseRgb) {
+      throw new AccessibilityError(
+        'Failed to parse base color for accessible pair suggestions',
+        { 
+          operation: 'suggestAccessiblePairs',
+          input: typeof baseColor === 'string' ? baseColor : JSON.stringify(baseColor)
+        }
+      );
+    }
 
   const baseHsl = ColorConverter.rgbToHSL(baseRgb);
   const suggestions: {
@@ -313,4 +412,14 @@ export function suggestAccessiblePairs(baseColor: string | RGB, count = 5): {
   return suggestions
     .sort((a, b) => b.contrast - a.contrast)
     .slice(0, count);
+  } catch (error) {
+    if (error instanceof ColorError) throw error;
+    throw new AccessibilityError(
+      `Failed to suggest accessible pairs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { 
+        operation: 'suggestAccessiblePairs',
+        metadata: { baseColor, count }
+      }
+    );
+  }
 }

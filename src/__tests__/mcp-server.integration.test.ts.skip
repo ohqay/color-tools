@@ -1,0 +1,649 @@
+/**
+ * Comprehensive MCP Server Integration Tests
+ * Tests complete MCP workflows from client perspective and validates protocol compliance
+ */
+
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
+
+// Mock the file system module to avoid reading package.json
+mock.module('fs', () => ({
+  readFileSync: mock(() => JSON.stringify({ version: '1.0.0' }))
+}));
+
+// Mock the path and url modules
+mock.module('url', () => ({
+  fileURLToPath: mock(() => '/mock/path/to/index.ts')
+}));
+
+mock.module('path', () => ({
+  dirname: mock(() => '/mock/path/to'),
+  join: mock((...args) => args.join('/'))
+}));
+
+// Create a mock server that captures handler functions
+let mockListToolsHandler: () => any;
+let mockCallToolHandler: (request: any) => any;
+let mockListResourcesHandler: () => any;
+let mockReadResourceHandler: (request: any) => any;
+
+const mockSetRequestHandler = mock((schema: any, handler: (...args: any[]) => any) => {
+  const schemaName = schema?.name ?? schema;
+  if (schemaName?.includes?.('ListTools') || schema === 'list-tools') {
+    mockListToolsHandler = handler;
+  } else if (schemaName?.includes?.('CallTool') || schema === 'call-tool') {
+    mockCallToolHandler = handler;
+  } else if (schemaName?.includes?.('ListResources') || schema === 'list-resources') {
+    mockListResourcesHandler = handler;
+  } else if (schemaName?.includes?.('ReadResource') || schema === 'read-resource') {
+    mockReadResourceHandler = handler;
+  }
+});
+
+const mockConnect = mock(() => Promise.resolve(undefined));
+
+const mockServer = {
+  setRequestHandler: mockSetRequestHandler,
+  connect: mockConnect
+};
+
+const MockServer = mock(() => mockServer);
+const MockStdioServerTransport = mock(() => ({}));
+
+// Mock the MCP SDK
+mock.module('@modelcontextprotocol/sdk/server/index.js', () => ({
+  Server: MockServer
+}));
+
+mock.module('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: MockStdioServerTransport
+}));
+
+// Mock schemas as simple objects
+mock.module('@modelcontextprotocol/sdk/types.js', () => ({
+  ListToolsRequestSchema: { name: 'ListToolsRequestSchema' },
+  CallToolRequestSchema: { name: 'CallToolRequestSchema' },
+  ListResourcesRequestSchema: { name: 'ListResourcesRequestSchema' },
+  ReadResourceRequestSchema: { name: 'ReadResourceRequestSchema' }
+}));
+
+// Import the server module and wait for initialization
+const initializationPromise = import('../index.js').then((_module) => {
+  return new Promise(resolve => setTimeout(resolve, 100));
+});
+
+await initializationPromise;
+
+describe('MCP Server Integration Tests', () => {
+  describe('Complete Tool Workflows', () => {
+    it('should handle complex color conversion workflow end-to-end', async () => {
+      // Step 1: List available tools
+      const toolsList = await mockListToolsHandler();
+      expect(toolsList.tools).toBeDefined();
+      
+      const convertTool = toolsList.tools.find((t: any) => t.name === 'convert-color');
+      expect(convertTool).toBeDefined();
+      
+      // Step 2: Convert color through multiple formats
+      const colorWorkflow = [
+        { input: '#FF5733', to: ['rgb', 'hsl', 'lab', 'xyz'] },
+        { input: 'rgb(255, 87, 51)', to: ['hex', 'cmyk', 'hsb'] },
+        { input: 'hsl(9, 100%, 60%)', to: ['hex', 'rgb', 'lab'] }
+      ];
+      
+      for (const step of colorWorkflow) {
+        const result = await mockCallToolHandler({
+          params: {
+            name: 'convert-color',
+            arguments: step
+          }
+        });
+        
+        const response = JSON.parse(result.content[0].text);
+        expect(response.success).toBe(true);
+        expect(response.input).toBe(step.input);
+        
+        // Verify all requested formats are present
+        for (const format of step.to) {
+          expect(response[format]).toBeDefined();
+        }
+      }
+    });
+
+    it('should handle complete harmony generation workflow', async () => {
+      // Step 1: Generate harmonies for brand color
+      const brandColor = '#1E88E5';
+      const harmonyTypes = ['complementary', 'analogous', 'triadic', 'tetradic', 'split-complementary'];
+      
+      const harmonies = [];
+      for (const harmonyType of harmonyTypes) {
+        const result = await mockCallToolHandler({
+          params: {
+            name: 'generate-harmony',
+            arguments: {
+              baseColor: brandColor,
+              harmonyType,
+              outputFormat: 'hex'
+            }
+          }
+        });
+        
+        const response = JSON.parse(result.content[0].text);
+        expect(response.success).toBe(true);
+        harmonies.push(response.result);
+      }
+      
+      // Step 2: Check contrast for each harmony color against white background
+      for (const harmony of harmonies) {
+        for (const color of harmony.colors) {
+          const contrastResult = await mockCallToolHandler({
+            params: {
+              name: 'check-contrast',
+              arguments: {
+                foreground: color,
+                background: '#FFFFFF'
+              }
+            }
+          });
+          
+          const contrastResponse = JSON.parse(contrastResult.content[0].text);
+          expect(contrastResponse.success).toBe(true);
+          expect(contrastResponse.contrastRatio).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it('should handle accessibility workflow', async () => {
+      // Step 1: Find accessible alternatives for problematic colors
+      const problematicColors = [
+        { color: '#FFFF00', background: '#FFFFFF' }, // Yellow on white
+        { color: '#00FF00', background: '#F0F0F0' }, // Lime on light gray
+        { color: '#FF69B4', background: '#FFC0CB' }  // Hot pink on pink
+      ];
+      
+      for (const { color, background } of problematicColors) {
+        // Check original contrast
+        const originalContrast = await mockCallToolHandler({
+          params: {
+            name: 'check-contrast',
+            arguments: { foreground: color, background }
+          }
+        });
+        
+        const originalResponse = JSON.parse(originalContrast.content[0].text);
+        
+        // Find accessible alternative
+        const accessibleResult = await mockCallToolHandler({
+          params: {
+            name: 'find-accessible-color',
+            arguments: {
+              targetColor: color,
+              backgroundColor: background,
+              targetRatio: 4.5
+            }
+          }
+        });
+        
+        const accessibleResponse = JSON.parse(accessibleResult.content[0].text);
+        expect(accessibleResponse.success).toBe(true);
+        
+        // Verify the alternative has better contrast
+        const improvedContrast = await mockCallToolHandler({
+          params: {
+            name: 'check-contrast',
+            arguments: {
+              foreground: accessibleResponse.accessibleAlternative,
+              background
+            }
+          }
+        });
+        
+        const improvedResponse = JSON.parse(improvedContrast.content[0].text);
+        expect(improvedResponse.contrastRatio).toBeGreaterThanOrEqual(originalResponse.contrastRatio);
+      }
+    });
+
+    it('should handle color blindness simulation workflow', async () => {
+      // Step 1: Create a color palette
+      const palette = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'];
+      
+      // Step 2: Simulate all color blindness types
+      const simulationResult = await mockCallToolHandler({
+        params: {
+          name: 'simulate-colorblind',
+          arguments: {
+            color: palette[0] // Test with first color
+          }
+        }
+      });
+      
+      const simResponse = JSON.parse(simulationResult.content[0].text);
+      expect(simResponse.success).toBe(true);
+      expect(simResponse.simulations).toBeDefined();
+      
+      // Step 3: Check contrast between simulated colors
+      for (const simulation of simResponse.simulations) {
+        const contrastCheck = await mockCallToolHandler({
+          params: {
+            name: 'check-contrast',
+            arguments: {
+              foreground: simulation.simulatedColor,
+              background: '#FFFFFF'
+            }
+          }
+        });
+        
+        const contrastResponse = JSON.parse(contrastCheck.content[0].text);
+        expect(contrastResponse.success).toBe(true);
+      }
+    });
+
+    it('should handle color mixing workflow', async () => {
+      // Complex mixing workflow for creating gradients
+      const baseColors = [
+        { color1: '#FF0000', color2: '#0000FF' }, // Red to Blue
+        { color1: '#FFFF00', color2: '#00FF00' }, // Yellow to Green
+        { color1: '#FF00FF', color2: '#00FFFF' }  // Magenta to Cyan
+      ];
+      
+      const gradientSteps = [0, 0.25, 0.5, 0.75, 1];
+      
+      for (const { color1, color2 } of baseColors) {
+        const gradient = [];
+        
+        for (const ratio of gradientSteps) {
+          const mixResult = await mockCallToolHandler({
+            params: {
+              name: 'mix-colors',
+              arguments: {
+                color1,
+                color2,
+                ratio,
+                mode: 'normal'
+              }
+            }
+          });
+          
+          const mixResponse = JSON.parse(mixResult.content[0].text);
+          expect(mixResponse.success).toBe(true);
+          gradient.push(mixResponse.result);
+        }
+        
+        // Verify gradient has correct number of steps
+        expect(gradient).toHaveLength(gradientSteps.length);
+      }
+    });
+  });
+
+  describe('Resource Access Workflows', () => {
+    it('should handle complete palette exploration workflow', async () => {
+      // Step 1: List all resources
+      const resources = await mockListResourcesHandler();
+      expect(resources.resources).toBeDefined();
+      
+      // Step 2: Read the palette index
+      const paletteIndex = await mockReadResourceHandler({
+        params: { uri: 'color-palettes' }
+      });
+      
+      const indexContent = JSON.parse(paletteIndex.contents[0].text);
+      expect(indexContent.palettes).toBeDefined();
+      
+      // Step 3: Read each palette
+      const palettePromises = indexContent.palettes.map(async (palette: any) => {
+        const paletteResult = await mockReadResourceHandler({
+          params: { uri: `palette://${palette.id}` }
+        });
+        
+        const paletteContent = JSON.parse(paletteResult.contents[0].text);
+        expect(paletteContent.name).toBeDefined();
+        expect(paletteContent.colors).toBeDefined();
+        
+        return paletteContent;
+      });
+      
+      const palettes = await Promise.all(palettePromises);
+      expect(palettes.length).toBeGreaterThan(0);
+    });
+
+    it('should handle named colors exploration workflow', async () => {
+      // Step 1: Read named colors resource
+      const namedColors = await mockReadResourceHandler({
+        params: { uri: 'colors://named' }
+      });
+      
+      const namedContent = JSON.parse(namedColors.contents[0].text);
+      expect(namedContent.categories).toBeDefined();
+      
+      // Step 2: Convert some named colors
+      const testColors = ['red', 'blue', 'green', 'yellow', 'purple'];
+      
+      for (const colorName of testColors) {
+        const convertResult = await mockCallToolHandler({
+          params: {
+            name: 'convert-color',
+            arguments: {
+              input: colorName,
+              to: ['hex', 'rgb', 'hsl']
+            }
+          }
+        });
+        
+        const response = JSON.parse(convertResult.content[0].text);
+        expect(response.success).toBe(true);
+        expect(response.detectedFormat).toBe('hex');
+      }
+    });
+
+    it('should handle web-safe colors workflow', async () => {
+      // Step 1: Read web-safe colors
+      const webSafeResult = await mockReadResourceHandler({
+        params: { uri: 'colors://web-safe' }
+      });
+      
+      const webSafeContent = JSON.parse(webSafeResult.contents[0].text);
+      expect(webSafeContent.allColors).toBeDefined();
+      
+      // Step 2: Verify some colors are truly web-safe
+      const sampleColors = webSafeContent.allColors.slice(0, 5);
+      
+      for (const color of sampleColors) {
+        const convertResult = await mockCallToolHandler({
+          params: {
+            name: 'convert-color',
+            arguments: { input: color }
+          }
+        });
+        
+        const response = JSON.parse(convertResult.content[0].text);
+        expect(response.success).toBe(true);
+        
+        // Web-safe colors should have RGB values divisible by 51
+        const rgb = response.rawValues.rgb;
+        expect(rgb.r % 51).toBe(0);
+        expect(rgb.g % 51).toBe(0);
+        expect(rgb.b % 51).toBe(0);
+      }
+    });
+  });
+
+  describe('Error Recovery and Edge Cases', () => {
+    it('should handle cascading tool errors gracefully', async () => {
+      // Try to create a workflow with intentional errors
+      const errorWorkflow = [
+        {
+          tool: 'convert-color',
+          args: { input: 'not-a-color' },
+          expectError: true
+        },
+        {
+          tool: 'generate-harmony',
+          args: { baseColor: 'invalid', harmonyType: 'complementary' },
+          expectError: true
+        },
+        {
+          tool: 'check-contrast',
+          args: { foreground: '#000000' }, // Missing background
+          expectError: true
+        }
+      ];
+      
+      for (const step of errorWorkflow) {
+        const result = await mockCallToolHandler({
+          params: {
+            name: step.tool,
+            arguments: step.args
+          }
+        });
+        
+        const response = JSON.parse(result.content[0].text);
+        expect(response.success).toBe(false);
+        expect(response.error).toBeDefined();
+      }
+    });
+
+    it('should handle resource access errors', async () => {
+      const invalidResources = [
+        'palette://non-existent-palette',
+        'colors://invalid-type',
+        'unknown://protocol'
+      ];
+      
+      for (const uri of invalidResources) {
+        await expect(async () => {
+          await mockReadResourceHandler({ params: { uri } });
+        }).toThrow();
+      }
+    });
+
+    it('should handle concurrent tool calls', async () => {
+      // Simulate concurrent color conversions
+      const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'];
+      
+      const promises = colors.map(color => 
+        mockCallToolHandler({
+          params: {
+            name: 'convert-color',
+            arguments: { input: color }
+          }
+        })
+      );
+      
+      const results = await Promise.all(promises);
+      
+      // All should succeed
+      results.forEach((result, index) => {
+        const response = JSON.parse(result.content[0].text);
+        expect(response.success).toBe(true);
+        expect(response.input).toBe(colors[index]);
+      });
+    });
+  });
+
+  describe('Protocol Compliance', () => {
+    it('should provide complete tool metadata', async () => {
+      const tools = await mockListToolsHandler();
+      
+      // Verify each tool has required MCP fields
+      for (const tool of tools.tools) {
+        expect(tool.name).toBeDefined();
+        expect(tool.description).toBeDefined();
+        expect(tool.inputSchema).toBeDefined();
+        expect(tool.inputSchema.type).toBe('object');
+        expect(tool.inputSchema.properties).toBeDefined();
+        expect(tool.inputSchema.required).toBeDefined();
+      }
+    });
+
+    it('should provide complete resource metadata', async () => {
+      const resources = await mockListResourcesHandler();
+      
+      // Verify each resource has required MCP fields
+      for (const resource of resources.resources) {
+        expect(resource.uri).toBeDefined();
+        expect(resource.name).toBeDefined();
+        expect(resource.mimeType).toBeDefined();
+        expect(resource.description).toBeDefined();
+      }
+    });
+
+    it('should handle tool response format correctly', async () => {
+      const testCalls = [
+        {
+          name: 'convert-color',
+          arguments: { input: '#FF0000' }
+        },
+        {
+          name: 'color-info',
+          arguments: {}
+        }
+      ];
+      
+      for (const call of testCalls) {
+        const result = await mockCallToolHandler({ params: call });
+        
+        // Verify MCP response structure
+        expect(result.content).toBeDefined();
+        expect(Array.isArray(result.content)).toBe(true);
+        expect(result.content[0].type).toBe('text');
+        expect(result.content[0].text).toBeDefined();
+        
+        // Verify content is valid JSON
+        expect(() => JSON.parse(result.content[0].text)).not.toThrow();
+      }
+    });
+
+    it('should handle resource response format correctly', async () => {
+      const result = await mockReadResourceHandler({
+        params: { uri: 'color-palettes' }
+      });
+      
+      // Verify MCP response structure
+      expect(result.contents).toBeDefined();
+      expect(Array.isArray(result.contents)).toBe(true);
+      expect(result.contents[0].uri).toBeDefined();
+      expect(result.contents[0].mimeType).toBeDefined();
+      expect(result.contents[0].text).toBeDefined();
+    });
+  });
+
+  describe('Complex Integration Scenarios', () => {
+    it('should handle brand color system creation workflow', async () => {
+      // Simulate creating a complete brand color system
+      const brandPrimary = '#2C3E50';
+      
+      // Step 1: Generate color harmonies
+      const harmonyResult = await mockCallToolHandler({
+        params: {
+          name: 'generate-harmony',
+          arguments: {
+            baseColor: brandPrimary,
+            harmonyType: 'analogous',
+            outputFormat: 'hex'
+          }
+        }
+      });
+      
+      const harmonyResponse = JSON.parse(harmonyResult.content[0].text);
+      const brandColors = harmonyResponse.result.colors;
+      
+      // Step 2: Create tints and shades for each brand color
+      const colorSystem: any = {};
+      
+      for (let i = 0; i < brandColors.length; i++) {
+        const color = brandColors[i];
+        colorSystem[`color${i + 1}`] = {
+          base: color,
+          tints: [],
+          shades: []
+        };
+        
+        // Generate tints (mix with white)
+        for (const ratio of [0.2, 0.4, 0.6, 0.8]) {
+          const tintResult = await mockCallToolHandler({
+            params: {
+              name: 'mix-colors',
+              arguments: {
+                color1: color,
+                color2: '#FFFFFF',
+                ratio: ratio
+              }
+            }
+          });
+          
+          const tintResponse = JSON.parse(tintResult.content[0].text);
+          colorSystem[`color${i + 1}`].tints.push(tintResponse.result);
+        }
+        
+        // Generate shades (mix with black)
+        for (const ratio of [0.2, 0.4, 0.6, 0.8]) {
+          const shadeResult = await mockCallToolHandler({
+            params: {
+              name: 'mix-colors',
+              arguments: {
+                color1: color,
+                color2: '#000000',
+                ratio: ratio
+              }
+            }
+          });
+          
+          const shadeResponse = JSON.parse(shadeResult.content[0].text);
+          colorSystem[`color${i + 1}`].shades.push(shadeResponse.result);
+        }
+      }
+      
+      // Step 3: Check accessibility of text colors
+      const textColors = [colorSystem.color1.base, ...colorSystem.color1.shades];
+      const backgrounds = ['#FFFFFF', '#F5F5F5', '#E0E0E0'];
+      
+      for (const textColor of textColors) {
+        for (const background of backgrounds) {
+          const contrastResult = await mockCallToolHandler({
+            params: {
+              name: 'check-contrast',
+              arguments: {
+                foreground: textColor,
+                background: background
+              }
+            }
+          });
+          
+          const contrastResponse = JSON.parse(contrastResult.content[0].text);
+          expect(contrastResponse.success).toBe(true);
+        }
+      }
+      
+      // Verify complete color system was created
+      expect(Object.keys(colorSystem).length).toBe(brandColors.length);
+      for (const key in colorSystem) {
+        expect(colorSystem[key].tints).toHaveLength(4);
+        expect(colorSystem[key].shades).toHaveLength(4);
+      }
+    });
+
+    it('should handle Tailwind color matching workflow', async () => {
+      // Read Tailwind palette first
+      const tailwindResource = await mockReadResourceHandler({
+        params: { uri: 'palette://tailwind' }
+      });
+      
+      const tailwindPalette = JSON.parse(tailwindResource.contents[0].text);
+      
+      // Test custom colors against Tailwind
+      const customColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+      
+      for (const customColor of customColors) {
+        // Convert to get exact values
+        const convertResult = await mockCallToolHandler({
+          params: {
+            name: 'convert-color',
+            arguments: {
+              input: customColor,
+              to: ['hex', 'rgb', 'hsl']
+            }
+          }
+        });
+        
+        const colorData = JSON.parse(convertResult.content[0].text);
+        expect(colorData.success).toBe(true);
+        
+        // Check if it matches any Tailwind color
+        let matchFound = false;
+        for (const category of tailwindPalette.colors) {
+          if (category.colors) {
+            for (const shade of category.colors) {
+              if (shade.value.toLowerCase() === colorData.hex.toLowerCase()) {
+                matchFound = true;
+                break;
+              }
+            }
+          }
+          if (matchFound) break;
+        }
+        
+        // These are actual Tailwind colors, so should find matches
+        expect(matchFound).toBe(true);
+      }
+    });
+  });
+});

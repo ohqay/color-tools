@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { ColorConverter } from '../colorConverter.js';
 
 describe('LAB and XYZ Color Space Support', () => {
@@ -198,9 +198,9 @@ describe('LAB and XYZ Color Space Support', () => {
     });
 
     it('should throw error for invalid LAB values', () => {
-      expect(() => ColorConverter.parseLABString('lab(150%, 0, 0)')).toThrow('LAB L* value must be between 0 and 100');
-      expect(() => ColorConverter.parseLABString('lab(-10%, 0, 0)')).toThrow('LAB L* value must be between 0 and 100');
-      expect(() => ColorConverter.parseLABString('lab(50%, 200, 0)')).toThrow('LAB a* and b* values typically range from -128 to 127');
+      expect(() => ColorConverter.parseLABString('lab(150%, 0, 0)')).toThrow('LAB L* must be between 0 and 100');
+      expect(() => ColorConverter.parseLABString('lab(-10%, 0, 0)')).toThrow('LAB L* must be between 0 and 100');
+      expect(() => ColorConverter.parseLABString('lab(50%, 200, 0)')).toThrow('LAB a* must be between -128 and 128');
     });
 
     it('should return null for invalid format', () => {

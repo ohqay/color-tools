@@ -103,15 +103,15 @@ class InputParser {
 
     switch (normalizedHex.length) {
       case 3: // #RGB
-        r = parseInt(normalizedHex[0] + normalizedHex[0], 16);
-        g = parseInt(normalizedHex[1] + normalizedHex[1], 16);
-        b = parseInt(normalizedHex[2] + normalizedHex[2], 16);
+        r = parseInt(normalizedHex[0]! + normalizedHex[0]!, 16);
+        g = parseInt(normalizedHex[1]! + normalizedHex[1]!, 16);
+        b = parseInt(normalizedHex[2]! + normalizedHex[2]!, 16);
         break;
       case 4: // #RGBA
-        r = parseInt(normalizedHex[0] + normalizedHex[0], 16);
-        g = parseInt(normalizedHex[1] + normalizedHex[1], 16);
-        b = parseInt(normalizedHex[2] + normalizedHex[2], 16);
-        a = parseInt(normalizedHex[3] + normalizedHex[3], 16) / 255;
+        r = parseInt(normalizedHex[0]! + normalizedHex[0]!, 16);
+        g = parseInt(normalizedHex[1]! + normalizedHex[1]!, 16);
+        b = parseInt(normalizedHex[2]! + normalizedHex[2]!, 16);
+        a = parseInt(normalizedHex[3]! + normalizedHex[3]!, 16) / 255;
         break;
       case 6: // #RRGGBB
         r = parseInt(normalizedHex.substr(0, 2), 16);
@@ -141,10 +141,10 @@ class InputParser {
     }
 
     const [, r, g, b] = match;
-    const values = [parseInt(r), parseInt(g), parseInt(b)];
+    const values = [parseInt(r!), parseInt(g!), parseInt(b!)];
     
-    this.validateRGBValues(values[0], values[1], values[2]);
-    return { r: values[0], g: values[1], b: values[2] };
+    this.validateRGBValues(values[0]!, values[1]!, values[2]!);
+    return { r: values[0]!, g: values[1]!, b: values[2]! };
   }
 
   private static parseRGBA(rgba: string): RGBA {
@@ -155,13 +155,13 @@ class InputParser {
     }
 
     const [, r, g, b, a] = match;
-    const rgbValues = [parseInt(r), parseInt(g), parseInt(b)];
-    const alphaValue = parseFloat(a);
+    const rgbValues = [parseInt(r!), parseInt(g!), parseInt(b!)];
+    const alphaValue = parseFloat(a!);
     
-    this.validateRGBValues(rgbValues[0], rgbValues[1], rgbValues[2]);
+    this.validateRGBValues(rgbValues[0]!, rgbValues[1]!, rgbValues[2]!);
     this.validateAlpha(alphaValue);
     
-    return { r: rgbValues[0], g: rgbValues[1], b: rgbValues[2], a: alphaValue };
+    return { r: rgbValues[0]!, g: rgbValues[1]!, b: rgbValues[2]!, a: alphaValue };
   }
 
   private static parseHSL(hsl: string): HSL {
@@ -172,10 +172,10 @@ class InputParser {
     }
 
     const [, h, s, l] = match;
-    const values = [parseInt(h), parseInt(s), parseInt(l)];
+    const values = [parseInt(h!), parseInt(s!), parseInt(l!)];
     
-    this.validateHSLValues(values[0], values[1], values[2]);
-    return { h: values[0], s: values[1], l: values[2] };
+    this.validateHSLValues(values[0]!, values[1]!, values[2]!);
+    return { h: values[0]!, s: values[1]!, l: values[2]! };
   }
 
   private static parseHSLA(hsla: string): HSLA {
@@ -186,13 +186,13 @@ class InputParser {
     }
 
     const [, h, s, l, a] = match;
-    const hslValues = [parseInt(h), parseInt(s), parseInt(l)];
-    const alphaValue = parseFloat(a);
+    const hslValues = [parseInt(h!), parseInt(s!), parseInt(l!)];
+    const alphaValue = parseFloat(a!);
     
-    this.validateHSLValues(hslValues[0], hslValues[1], hslValues[2]);
+    this.validateHSLValues(hslValues[0]!, hslValues[1]!, hslValues[2]!);
     this.validateAlpha(alphaValue);
     
-    return { h: hslValues[0], s: hslValues[1], l: hslValues[2], a: alphaValue };
+    return { h: hslValues[0]!, s: hslValues[1]!, l: hslValues[2]!, a: alphaValue };
   }
 
   private static parseHSB(hsb: string): HSB {
@@ -203,10 +203,10 @@ class InputParser {
     }
 
     const [, , h, s, b] = match;
-    const values = [parseInt(h), parseInt(s), parseInt(b)];
+    const values = [parseInt(h!), parseInt(s!), parseInt(b!)];
     
-    this.validateHSBValues(values[0], values[1], values[2]);
-    return { h: values[0], s: values[1], b: values[2] };
+    this.validateHSBValues(values[0]!, values[1]!, values[2]!);
+    return { h: values[0]!, s: values[1]!, b: values[2]! };
   }
 
   private static parseCMYK(cmyk: string): CMYK {
@@ -217,10 +217,10 @@ class InputParser {
     }
 
     const [, c, m, y, k] = match;
-    const values = [parseInt(c), parseInt(m), parseInt(y), parseInt(k)];
+    const values = [parseInt(c!), parseInt(m!), parseInt(y!), parseInt(k!)];
     
-    this.validateCMYKValues(values[0], values[1], values[2], values[3]);
-    return { c: values[0], m: values[1], y: values[2], k: values[3] };
+    this.validateCMYKValues(values[0]!, values[1]!, values[2]!, values[3]!);
+    return { c: values[0]!, m: values[1]!, y: values[2]!, k: values[3]! };
   }
 
   private static parseLAB(lab: string): LAB {
@@ -231,9 +231,9 @@ class InputParser {
     }
 
     const [, l, a, b] = match;
-    const values = [parseFloat(l), parseFloat(a), parseFloat(b)];
+    const values = [parseFloat(l!), parseFloat(a!), parseFloat(b!)];
     
-    return { l: values[0], a: values[1], b: values[2] };
+    return { l: values[0]!, a: values[1]!, b: values[2]! };
   }
 
   private static parseXYZ(xyz: string): XYZ {
@@ -244,9 +244,9 @@ class InputParser {
     }
 
     const [, x, y, z] = match;
-    const values = [parseFloat(x), parseFloat(y), parseFloat(z)];
+    const values = [parseFloat(x!), parseFloat(y!), parseFloat(z!)];
     
-    return { x: values[0], y: values[1], z: values[2] };
+    return { x: values[0]!, y: values[1]!, z: values[2]! };
   }
 
   // Validation methods
@@ -580,8 +580,8 @@ export class OptimizedColorConverter {
 
     // Record performance metrics
     performanceMonitor.recordOperation('convert', duration, {
-      inputFormat: from,
-      outputFormats: to,
+      inputFormat: from ?? undefined,
+      outputFormats: to ?? undefined,
       cacheHit: false // Will be updated by cache logic
     });
 

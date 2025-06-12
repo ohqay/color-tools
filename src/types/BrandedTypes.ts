@@ -208,9 +208,9 @@ export function isBrandedRGB(value: unknown): value is BrandedRGB {
     'r' in value &&
     'g' in value &&
     'b' in value &&
-    isRGBValue((value as Record<string, unknown>).r) &&
-    isRGBValue((value as Record<string, unknown>).g) &&
-    isRGBValue((value as Record<string, unknown>).b)
+    isRGBValue((value as Record<string, unknown>)['r']) &&
+    isRGBValue((value as Record<string, unknown>)['g']) &&
+    isRGBValue((value as Record<string, unknown>)['b'])
   );
 }
 
@@ -218,7 +218,7 @@ export function isBrandedRGBA(value: unknown): value is BrandedRGBA {
   return (
     isBrandedRGB(value) &&
     'a' in value &&
-    isAlphaValue((value as Record<string, unknown>).a)
+    isAlphaValue((value as Record<string, unknown>)['a'])
   );
 }
 
@@ -229,9 +229,9 @@ export function isBrandedHSL(value: unknown): value is BrandedHSL {
     'h' in value &&
     's' in value &&
     'l' in value &&
-    isHueValue((value as Record<string, unknown>).h) &&
-    isPercentValue((value as Record<string, unknown>).s) &&
-    isPercentValue((value as Record<string, unknown>).l)
+    isHueValue((value as Record<string, unknown>)['h']) &&
+    isPercentValue((value as Record<string, unknown>)['s']) &&
+    isPercentValue((value as Record<string, unknown>)['l'])
   );
 }
 
@@ -239,7 +239,7 @@ export function isBrandedHSLA(value: unknown): value is BrandedHSLA {
   return (
     isBrandedHSL(value) &&
     'a' in value &&
-    isAlphaValue((value as Record<string, unknown>).a)
+    isAlphaValue((value as Record<string, unknown>)['a'])
   );
 }
 

@@ -1,5 +1,14 @@
 import type { RGB, RGBA, HSL, HSLA, HSB, CMYK, LAB, XYZ, ColorFormat, ConversionResult, BlendMode, MixResult } from './types.js';
 import { NAMED_COLORS_MAP_INTERNAL } from './namedColors.js';
+import { 
+  ColorError, 
+  ColorErrorFactory, 
+  ValidationError, 
+  ConversionError, 
+  RangeError,
+  validateColorInput,
+  validateNumberInRange
+} from './core/errors/ColorError.js';
 
 // Pre-computed constants for performance optimization
 const GAMMA_THRESHOLD = 0.04045;
@@ -107,88 +116,142 @@ const conversionCache = new ConversionCache();
 export class ColorConverter {
   // Detect color format from input string
   static detectFormat(input: string): ColorFormat | null {
-    const trimmed = input.trim().toLowerCase();
-    
-    // Check for named colors first
-    if (NAMED_COLORS_MAP_INTERNAL.has(trimmed)) {
-      return 'hex';
+    try {
+      validateColorInput(input, 'input');
+      const trimmed = input.trim().toLowerCase();
+      
+      // Check for named colors first
+      if (NAMED_COLORS_MAP_INTERNAL.has(trimmed)) {
+        return 'hex';
+      }
+      
+      // Optimized format detection using pre-compiled patterns
+      if (FORMAT_PATTERNS.hex.test(trimmed)) {return 'hex';}
+      if (FORMAT_PATTERNS.rgba.test(trimmed)) {return 'rgba';}
+      if (FORMAT_PATTERNS.rgb.test(trimmed) || FORMAT_PATTERNS.rgbSimple.test(trimmed)) {return 'rgb';}
+      if (FORMAT_PATTERNS.hsla.test(trimmed)) {return 'hsla';}
+      if (FORMAT_PATTERNS.hsl.test(trimmed)) {return 'hsl';}
+      if (FORMAT_PATTERNS.hsb.test(trimmed)) {return 'hsb';}
+      if (FORMAT_PATTERNS.cmyk.test(trimmed)) {return 'cmyk';}
+      if (FORMAT_PATTERNS.lab.test(trimmed)) {return 'lab';}
+      if (FORMAT_PATTERNS.xyz.test(trimmed)) {return 'xyz';}
+      
+      return null;
+    } catch (error) {
+      // Re-throw validation errors
+      if (error instanceof ColorError) throw error;
+      return null;
     }
-    
-    // Optimized format detection using pre-compiled patterns
-    if (FORMAT_PATTERNS.hex.test(trimmed)) {return 'hex';}
-    if (FORMAT_PATTERNS.rgba.test(trimmed)) {return 'rgba';}
-    if (FORMAT_PATTERNS.rgb.test(trimmed) || FORMAT_PATTERNS.rgbSimple.test(trimmed)) {return 'rgb';}
-    if (FORMAT_PATTERNS.hsla.test(trimmed)) {return 'hsla';}
-    if (FORMAT_PATTERNS.hsl.test(trimmed)) {return 'hsl';}
-    if (FORMAT_PATTERNS.hsb.test(trimmed)) {return 'hsb';}
-    if (FORMAT_PATTERNS.cmyk.test(trimmed)) {return 'cmyk';}
-    if (FORMAT_PATTERNS.lab.test(trimmed)) {return 'lab';}
-    if (FORMAT_PATTERNS.xyz.test(trimmed)) {return 'xyz';}
-    
-    return null;
   }
 
   // Parse input string to RGB (with optional alpha)
   static parseToRGB(input: string, format?: ColorFormat): RGB | RGBA | null {
-    const detectedFormat = format ?? this.detectFormat(input);
-    if (!detectedFormat) {return null;}
+    try {
+      validateColorInput(input, 'input');
+      
+      const detectedFormat = format ?? this.detectFormat(input);
+      if (!detectedFormat) {
+        throw ColorErrorFactory.invalidColorFormat(input, 
+          ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk', 'lab', 'xyz']
+        );
+      }
 
-    const trimmed = input.trim();
-    const trimmedLower = trimmed.toLowerCase();
+      const trimmed = input.trim();
+      const trimmedLower = trimmed.toLowerCase();
 
-    // Handle named colors
-    if (NAMED_COLORS_MAP_INTERNAL.has(trimmedLower) && detectedFormat === 'hex') {
-      const namedColorHex = NAMED_COLORS_MAP_INTERNAL.get(trimmedLower) as string;
-      if (namedColorHex === 'transparent') {
-        return { r: 0, g: 0, b: 0, a: 0 } as RGBA;
+      // Handle named colors
+      if (NAMED_COLORS_MAP_INTERNAL.has(trimmedLower) && detectedFormat === 'hex') {
+        const namedColorHex = NAMED_COLORS_MAP_INTERNAL.get(trimmedLower) as string;
+        if (namedColorHex === 'transparent') {
+          return { r: 0, g: 0, b: 0, a: 0 } as RGBA;
+        }
+        if (namedColorHex === 'currentcolor') {
+          throw new ValidationError(
+            'currentcolor is context-dependent and cannot be converted',
+            { input: trimmedLower, format: 'named-color' }
+          );
+        }
+        return this.hexToRGB(namedColorHex);
       }
-      if (namedColorHex === 'currentcolor') {
-        throw new Error('currentcolor is context-dependent and cannot be converted');
-      }
-      return this.hexToRGB(namedColorHex);
-    }
 
-    switch (detectedFormat) {
-      case 'hex':
-        return this.hexToRGB(trimmed);
-      case 'rgb':
-        return this.parseRGBString(trimmed);
-      case 'rgba':
-        return this.parseRGBAString(trimmed);
-      case 'hsl': {
-        const hsl = this.parseHSLString(trimmed);
-        if (!hsl) {throw new Error('Invalid HSL format');}
-        return this.hslToRGB(hsl);
+      switch (detectedFormat) {
+        case 'hex': {
+          const result = this.hexToRGB(trimmed);
+          if (!result) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, 'hex', 'Invalid hexadecimal format');
+          }
+          return result;
+        }
+        case 'rgb': {
+          const result = this.parseRGBString(trimmed);
+          if (!result) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, 'rgb', 'Invalid RGB format');
+          }
+          return result;
+        }
+        case 'rgba': {
+          const result = this.parseRGBAString(trimmed);
+          if (!result) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, 'rgba', 'Invalid RGBA format');
+          }
+          return result;
+        }
+        case 'hsl': {
+          const hsl = this.parseHSLString(trimmed);
+          if (!hsl) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, 'hsl', 'Invalid HSL format');
+          }
+          return this.hslToRGB(hsl);
+        }
+        case 'hsla': {
+          const hsla = this.parseHSLAString(trimmed);
+          if (!hsla) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, 'hsla', 'Invalid HSLA format');
+          }
+          const rgb = this.hslToRGB(hsla);
+          return { ...rgb, a: hsla.a } as RGBA;
+        }
+        case 'hsb':
+        case 'hsv': {
+          const hsb = this.parseHSBString(trimmed);
+          if (!hsb) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, detectedFormat, 'Invalid HSB/HSV format');
+          }
+          return this.hsbToRGB(hsb);
+        }
+        case 'cmyk': {
+          const cmyk = this.parseCMYKString(trimmed);
+          if (!cmyk) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, 'cmyk', 'Invalid CMYK format');
+          }
+          return this.cmykToRGB(cmyk);
+        }
+        case 'lab': {
+          const lab = this.parseLABString(trimmed);
+          if (!lab) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, 'lab', 'Invalid LAB format');
+          }
+          return this.labToRGB(lab);
+        }
+        case 'xyz': {
+          const xyz = this.parseXYZString(trimmed);
+          if (!xyz) {
+            throw ColorErrorFactory.invalidColorValue(trimmed, 'xyz', 'Invalid XYZ format');
+          }
+          return this.xyzToRGB(xyz);
+        }
+        default:
+          throw ColorErrorFactory.unsupportedFormat(detectedFormat, 
+            ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk', 'lab', 'xyz']
+          );
       }
-      case 'hsla': {
-        const hsla = this.parseHSLAString(trimmed);
-        if (!hsla) {throw new Error('Invalid HSLA format');}
-        const rgb = this.hslToRGB(hsla);
-        return { ...rgb, a: hsla.a } as RGBA;
-      }
-      case 'hsb':
-      case 'hsv': {
-        const hsb = this.parseHSBString(trimmed);
-        if (!hsb) {throw new Error('Invalid HSB format');}
-        return this.hsbToRGB(hsb);
-      }
-      case 'cmyk': {
-        const cmyk = this.parseCMYKString(trimmed);
-        if (!cmyk) {throw new Error('Invalid CMYK format');}
-        return this.cmykToRGB(cmyk);
-      }
-      case 'lab': {
-        const lab = this.parseLABString(trimmed);
-        if (!lab) {throw new Error('Invalid LAB format');}
-        return this.labToRGB(lab);
-      }
-      case 'xyz': {
-        const xyz = this.parseXYZString(trimmed);
-        if (!xyz) {throw new Error('Invalid XYZ format');}
-        return this.xyzToRGB(xyz);
-      }
-      default:
-        return null;
+    } catch (error) {
+      // Re-throw ColorError instances, wrap others
+      if (error instanceof ColorError) throw error;
+      throw new ConversionError(
+        error instanceof Error ? error.message : 'Failed to parse color input',
+        { input, format: format ?? undefined, operation: 'parseToRGB' }
+      );
     }
   }
 
@@ -201,15 +264,15 @@ export class ColorConverter {
     // Use switch for better performance than multiple if-else
     switch (len) {
       case 3: // #RGB
-        r = parseInt(cleaned[0], 16) * 17; // Faster than cleaned[0] + cleaned[0]
-        g = parseInt(cleaned[1], 16) * 17;
-        b = parseInt(cleaned[2], 16) * 17;
+        r = parseInt(cleaned[0]!, 16) * 17; // Faster than cleaned[0] + cleaned[0]
+        g = parseInt(cleaned[1]!, 16) * 17;
+        b = parseInt(cleaned[2]!, 16) * 17;
         break;
       case 4: // #RGBA
-        r = parseInt(cleaned[0], 16) * 17;
-        g = parseInt(cleaned[1], 16) * 17;
-        b = parseInt(cleaned[2], 16) * 17;
-        a = parseInt(cleaned[3], 16) * 17 / 255; // Convert to 0-1 range
+        r = parseInt(cleaned[0]!, 16) * 17;
+        g = parseInt(cleaned[1]!, 16) * 17;
+        b = parseInt(cleaned[2]!, 16) * 17;
+        a = parseInt(cleaned[3]!, 16) * 17 / 255; // Convert to 0-1 range
         break;
       case 6: // #RRGGBB
         r = parseInt(cleaned.slice(0, 2), 16);
@@ -526,13 +589,23 @@ export class ColorConverter {
     
     if (!rgbMatch) {return null;}
 
-    const r = parseInt(rgbMatch[1], 10);
-    const g = parseInt(rgbMatch[2], 10);
-    const b = parseInt(rgbMatch[3], 10);
+    const r = parseInt(rgbMatch[1]!, 10);
+    const g = parseInt(rgbMatch[2]!, 10);
+    const b = parseInt(rgbMatch[3]!, 10);
 
     // Single validation check
-    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-      throw new Error(`RGB values must be between 0 and 255. Got: r=${r}, g=${g}, b=${b}`);
+    try {
+      validateNumberInRange(r, 0, 255, 'Red channel');
+      validateNumberInRange(g, 0, 255, 'Green channel');
+      validateNumberInRange(b, 0, 255, 'Blue channel');
+    } catch (error) {
+      if (error instanceof RangeError) {
+        throw new ValidationError(
+          `RGB values must be between 0 and 255. Got: r=${r}, g=${g}, b=${b}`,
+          { input, format: 'rgb', metadata: { r, g, b } }
+        );
+      }
+      throw error;
     }
 
     return { r, g, b };
@@ -543,18 +616,25 @@ export class ColorConverter {
     const match = input.match(/rgba\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?[\d.]+)\s*\)/i);
     if (!match) {return null;}
 
-    const r = parseInt(match[1], 10);
-    const g = parseInt(match[2], 10);
-    const b = parseInt(match[3], 10);
-    const a = parseFloat(match[4]);
+    const r = parseInt(match[1]!, 10);
+    const g = parseInt(match[2]!, 10);
+    const b = parseInt(match[3]!, 10);
+    const a = parseFloat(match[4]!);
 
     // Combined validation checks
-    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-      throw new Error(`RGB values must be between 0 and 255. Got: r=${r}, g=${g}, b=${b}`);
-    }
-    
-    if (a < 0 || a > 1) {
-      throw new Error(`Alpha value must be between 0 and 1. Got: ${a}`);
+    try {
+      validateNumberInRange(r, 0, 255, 'Red channel');
+      validateNumberInRange(g, 0, 255, 'Green channel');
+      validateNumberInRange(b, 0, 255, 'Blue channel');
+      validateNumberInRange(a, 0, 1, 'Alpha channel');
+    } catch (error) {
+      if (error instanceof RangeError) {
+        throw new ValidationError(
+          error.message,
+          { input, format: 'rgba', metadata: { r, g, b, a } }
+        );
+      }
+      throw error;
     }
 
     return { r, g, b, a };
@@ -565,9 +645,9 @@ export class ColorConverter {
     const match = input.match(/(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?/);
     if (!match) {return null;}
 
-    const h = parseInt(match[1]);
-    const s = parseInt(match[2]);
-    const l = parseInt(match[3]);
+    const h = parseInt(match[1]!);
+    const s = parseInt(match[2]!);
+    const l = parseInt(match[3]!);
 
     if (h > 360 || h < 0) {
       throw new Error(`Hue must be between 0 and 360. Got: ${h}`);
@@ -584,10 +664,10 @@ export class ColorConverter {
     const match = input.match(/hsla\s*\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*([\d.]+)\s*\)/i);
     if (!match) {return null;}
 
-    const h = parseInt(match[1]);
-    const s = parseInt(match[2]);
-    const l = parseInt(match[3]);
-    const a = parseFloat(match[4]);
+    const h = parseInt(match[1]!);
+    const s = parseInt(match[2]!);
+    const l = parseInt(match[3]!);
+    const a = parseFloat(match[4]!);
 
     if (h > 360 || h < 0) {
       throw new Error(`Hue must be between 0 and 360. Got: ${h}`);
@@ -607,15 +687,22 @@ export class ColorConverter {
     const match = input.match(/(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?/);
     if (!match) {return null;}
 
-    const h = parseInt(match[1]);
-    const s = parseInt(match[2]);
-    const b = parseInt(match[3]);
+    const h = parseInt(match[1]!);
+    const s = parseInt(match[2]!);
+    const b = parseInt(match[3]!);
 
-    if (h > 360 || h < 0) {
-      throw new Error(`Hue must be between 0 and 360. Got: ${h}`);
-    }
-    if (s > 100 || s < 0 || b > 100 || b < 0) {
-      throw new Error(`Saturation and Brightness must be between 0 and 100. Got: s=${s}, b=${b}`);
+    try {
+      validateNumberInRange(h, 0, 360, 'Hue');
+      validateNumberInRange(s, 0, 100, 'Saturation');
+      validateNumberInRange(b, 0, 100, 'Brightness');
+    } catch (error) {
+      if (error instanceof RangeError) {
+        throw new ValidationError(
+          error.message,
+          { input, format: 'hsb', metadata: { h, s, b } }
+        );
+      }
+      throw error;
     }
 
     return { h, s, b };
@@ -626,13 +713,24 @@ export class ColorConverter {
     const match = input.match(/(-?\d+)%?\s*,\s*(-?\d+)%?\s*,\s*(-?\d+)%?\s*,\s*(-?\d+)%?/);
     if (!match) {return null;}
 
-    const c = parseInt(match[1]);
-    const m = parseInt(match[2]);
-    const y = parseInt(match[3]);
-    const k = parseInt(match[4]);
+    const c = parseInt(match[1]!);
+    const m = parseInt(match[2]!);
+    const y = parseInt(match[3]!);
+    const k = parseInt(match[4]!);
 
-    if (c > 100 || c < 0 || m > 100 || m < 0 || y > 100 || y < 0 || k > 100 || k < 0) {
-      throw new Error(`CMYK values must be between 0 and 100. Got: c=${c}, m=${m}, y=${y}, k=${k}`);
+    try {
+      validateNumberInRange(c, 0, 100, 'Cyan');
+      validateNumberInRange(m, 0, 100, 'Magenta');
+      validateNumberInRange(y, 0, 100, 'Yellow');
+      validateNumberInRange(k, 0, 100, 'Black/Key');
+    } catch (error) {
+      if (error instanceof RangeError) {
+        throw new ValidationError(
+          error.message,
+          { input, format: 'cmyk', metadata: { c, m, y, k } }
+        );
+      }
+      throw error;
     }
 
     return { c, m, y, k };
@@ -643,17 +741,22 @@ export class ColorConverter {
     const match = input.match(/lab\s*\(\s*(-?[\d.]+)%?\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/i);
     if (!match) {return null;}
 
-    const l = parseFloat(match[1]);
-    const a = parseFloat(match[2]);
-    const b = parseFloat(match[3]);
+    const l = parseFloat(match[1]!);
+    const a = parseFloat(match[2]!);
+    const b = parseFloat(match[3]!);
 
-    if (l > 100 || l < 0) {
-      throw new Error(`LAB L* value must be between 0 and 100. Got: ${l}`);
-    }
-
-    // a* and b* typically range from -128 to 127, but we'll be more permissive
-    if (Math.abs(a) > 128 || Math.abs(b) > 128) {
-      throw new Error(`LAB a* and b* values typically range from -128 to 127. Got: a=${a}, b=${b}`);
+    try {
+      validateNumberInRange(l, 0, 100, 'LAB L*');
+      validateNumberInRange(a, -128, 128, 'LAB a*');
+      validateNumberInRange(b, -128, 128, 'LAB b*');
+    } catch (error) {
+      if (error instanceof RangeError) {
+        throw new ValidationError(
+          error.message,
+          { input, format: 'lab', metadata: { l, a, b } }
+        );
+      }
+      throw error;
     }
 
     return { l, a, b };
@@ -664,13 +767,33 @@ export class ColorConverter {
     const match = input.match(/xyz\s*\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/i);
     if (!match) {return null;}
 
-    const x = parseFloat(match[1]);
-    const y = parseFloat(match[2]);
-    const z = parseFloat(match[3]);
+    const x = parseFloat(match[1]!);
+    const y = parseFloat(match[2]!);
+    const z = parseFloat(match[3]!);
 
     // XYZ values for D65 illuminant typically range: X(0-95.047), Y(0-100), Z(0-108.883)
-    if (x < 0 || y < 0 || z < 0) {
-      throw new Error(`XYZ values must be non-negative. Got: x=${x}, y=${y}, z=${z}`);
+    try {
+      if (x < 0 || y < 0 || z < 0) {
+        throw new RangeError(
+          `XYZ values must be non-negative. Got: x=${x}, y=${y}, z=${z}`,
+          { 
+            input, 
+            format: 'xyz', 
+            metadata: { x, y, z },
+            expectedRange: { min: 0, max: Infinity }
+          }
+        );
+      }
+      // Warn if values are unusually high
+      if (x > 150 || y > 150 || z > 150) {
+        console.warn(`XYZ values are unusually high: x=${x}, y=${y}, z=${z}`);
+      }
+    } catch (error) {
+      if (error instanceof ColorError) throw error;
+      throw new ValidationError(
+        error instanceof Error ? error.message : 'Invalid XYZ values',
+        { input, format: 'xyz', metadata: { x, y, z } }
+      );
     }
 
     return { x, y, z };
@@ -715,21 +838,26 @@ export class ColorConverter {
 
   // Main conversion method - with caching
   static convert(input: string, from?: ColorFormat, to?: ColorFormat[]): ConversionResult {
-    // Create cache key (handle undefined vs empty array difference)
-    const targetFormatsKey = to === undefined ? 'all' : to.join(',');
-    const cacheKey = `${input}|${from ?? 'auto'}|${targetFormatsKey}`;
-    
-    // Check cache first
-    const cached = conversionCache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
+    try {
+      validateColorInput(input, 'input');
+      
+      // Create cache key (handle undefined vs empty array difference)
+      const targetFormatsKey = to === undefined ? 'all' : to.join(',');
+      const cacheKey = `${input}|${from ?? 'auto'}|${targetFormatsKey}`;
+      
+      // Check cache first
+      const cached = conversionCache.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
 
-    // Parse input to RGB/RGBA
-    const rgbOrRgba = this.parseToRGB(input, from);
-    if (!rgbOrRgba) {
-      throw new Error('Invalid color format or value');
-    }
+      // Parse input to RGB/RGBA
+      const rgbOrRgba = this.parseToRGB(input, from);
+      if (!rgbOrRgba) {
+        throw ColorErrorFactory.invalidColorFormat(input, 
+          ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk', 'lab', 'xyz']
+        );
+      }
 
     // Check if we have alpha channel
     const hasAlpha = 'a' in rgbOrRgba;
@@ -807,6 +935,19 @@ export class ColorConverter {
     // Cache the result before returning
     conversionCache.set(cacheKey, result);
     return result;
+    } catch (error) {
+      // Re-throw ColorError instances, wrap others
+      if (error instanceof ColorError) throw error;
+      throw new ConversionError(
+        error instanceof Error ? error.message : 'Color conversion failed',
+        { 
+          operation: 'convert',
+          input,
+          format: from ?? undefined,
+          metadata: { targetFormats: to }
+        }
+      );
+    }
   }
 
   // Clear cache method for testing/memory management
@@ -824,13 +965,25 @@ export class ColorConverter {
 
   // Mix two colors in LAB space (perceptually uniform)
   static mixColors(color1: string, color2: string, ratio = 0.5, mode: BlendMode = 'normal'): MixResult {
-    // Parse both colors to RGB
-    const rgb1 = this.parseToRGB(color1);
-    const rgb2 = this.parseToRGB(color2);
-    
-    if (!rgb1 || !rgb2) {
-      throw new Error('Invalid color format');
-    }
+    try {
+      validateColorInput(color1, 'color1');
+      validateColorInput(color2, 'color2');
+      validateNumberInRange(ratio, 0, 1, 'ratio');
+      
+      // Parse both colors to RGB
+      const rgb1 = this.parseToRGB(color1);
+      const rgb2 = this.parseToRGB(color2);
+      
+      if (!rgb1 || !rgb2) {
+        throw new ConversionError(
+          'Failed to parse colors for mixing',
+          { 
+            operation: 'mixColors',
+            input: `color1: ${color1}, color2: ${color2}`,
+            metadata: { color1, color2, ratio, mode }
+          }
+        );
+      }
 
     // Handle blend modes
     let mixedRgb: RGB;
@@ -883,7 +1036,14 @@ export class ColorConverter {
       }
         
       default:
-        throw new Error(`Unknown blend mode: ${mode}`);
+        throw new ValidationError(
+          `Unknown blend mode: ${mode}`,
+          { 
+            operation: 'mixColors',
+            metadata: { mode },
+            suggestions: ['Use one of: normal, multiply, screen, overlay']
+          }
+        );
     }
 
     // Handle alpha channel if present
@@ -908,5 +1068,17 @@ export class ColorConverter {
     result.mode = mode;
     
     return result;
+    } catch (error) {
+      // Re-throw ColorError instances, wrap others
+      if (error instanceof ColorError) throw error;
+      throw new ConversionError(
+        error instanceof Error ? error.message : 'Failed to mix colors',
+        { 
+          operation: 'mixColors',
+          input: `color1: ${color1}, color2: ${color2}`,
+          metadata: { color1, color2, ratio, mode }
+        }
+      );
+    }
   }
 }
