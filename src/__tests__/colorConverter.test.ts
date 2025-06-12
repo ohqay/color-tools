@@ -8,6 +8,8 @@ describe('ColorConverter', () => {
       expect(ColorConverter.detectFormat('#FFF')).toBe('hex');
       expect(ColorConverter.detectFormat('#FFFFFF')).toBe('hex');
       expect(ColorConverter.detectFormat('#123abc')).toBe('hex');
+      expect(ColorConverter.detectFormat('#FFFF')).toBe('hex'); // 4-digit with alpha
+      expect(ColorConverter.detectFormat('#FFFFFFFF')).toBe('hex'); // 8-digit with alpha
     });
 
     it('should detect named colors as hex format', () => {
@@ -76,10 +78,25 @@ describe('ColorConverter', () => {
       expect(ColorConverter.hexToRGB('FF0000')).toEqual({ r: 255, g: 0, b: 0 });
     });
 
+    it('should convert 4-digit hex with alpha to RGBA', () => {
+      expect(ColorConverter.hexToRGB('#F00F')).toEqual({ r: 255, g: 0, b: 0, a: 1 });
+      expect(ColorConverter.hexToRGB('#0F08')).toEqual({ r: 0, g: 255, b: 0, a: 0.5333333333333333 });
+      expect(ColorConverter.hexToRGB('#00F0')).toEqual({ r: 0, g: 0, b: 255, a: 0 });
+    });
+
+    it('should convert 8-digit hex with alpha to RGBA', () => {
+      expect(ColorConverter.hexToRGB('#FF0000FF')).toEqual({ r: 255, g: 0, b: 0, a: 1 });
+      expect(ColorConverter.hexToRGB('#00FF0080')).toEqual({ r: 0, g: 255, b: 0, a: 0.5019607843137255 });
+      expect(ColorConverter.hexToRGB('#0000FF00')).toEqual({ r: 0, g: 0, b: 255, a: 0 });
+      expect(ColorConverter.hexToRGB('#D4C7BABF')).toEqual({ r: 212, g: 199, b: 186, a: 0.7490196078431373 });
+    });
+
     it('should return null for invalid hex', () => {
       expect(ColorConverter.hexToRGB('#GGGGGG')).toBe(null);
       expect(ColorConverter.hexToRGB('#12')).toBe(null);
+      expect(ColorConverter.hexToRGB('#12345')).toBe(null);
       expect(ColorConverter.hexToRGB('#1234567')).toBe(null);
+      expect(ColorConverter.hexToRGB('#123456789')).toBe(null);
     });
   });
 
@@ -93,6 +110,18 @@ describe('ColorConverter', () => {
 
     it('should clamp values outside 0-255 range', () => {
       expect(ColorConverter.rgbToHex({ r: 300, g: -50, b: 128 })).toBe('#ff0080');
+    });
+
+    it('should convert RGBA to 8-digit hex', () => {
+      expect(ColorConverter.rgbToHex({ r: 255, g: 0, b: 0, a: 1 })).toBe('#ff0000ff');
+      expect(ColorConverter.rgbToHex({ r: 0, g: 255, b: 0, a: 0.5 })).toBe('#00ff0080');
+      expect(ColorConverter.rgbToHex({ r: 0, g: 0, b: 255, a: 0 })).toBe('#0000ff00');
+      expect(ColorConverter.rgbToHex({ r: 212, g: 199, b: 186, a: 0.75 })).toBe('#d4c7babf');
+    });
+
+    it('should clamp alpha values outside 0-1 range', () => {
+      expect(ColorConverter.rgbToHex({ r: 255, g: 0, b: 0, a: 1.5 })).toBe('#ff0000ff');
+      expect(ColorConverter.rgbToHex({ r: 0, g: 255, b: 0, a: -0.5 })).toBe('#00ff0000');
     });
   });
 
@@ -186,6 +215,11 @@ describe('ColorConverter', () => {
     it('should throw error for negative alpha values', () => {
       expect(() => ColorConverter.parseRGBAString('rgba(255, 0, 0, -0.1)')).toThrow('Alpha value must be between 0 and 1');
     });
+
+    it('should throw error for invalid RGB values in RGBA', () => {
+      expect(() => ColorConverter.parseRGBAString('rgba(256, 0, 0, 0.5)')).toThrow('RGB values must be between 0 and 255');
+      expect(() => ColorConverter.parseRGBAString('rgba(0, -1, 0, 0.5)')).toThrow('RGB values must be between 0 and 255');
+    });
   });
 
   describe('parseHSLString', () => {
@@ -213,6 +247,14 @@ describe('ColorConverter', () => {
 
     it('should throw error for invalid HSLA alpha values', () => {
       expect(() => ColorConverter.parseHSLAString('hsla(180, 50%, 50%, 1.5)')).toThrow('Alpha value must be between 0 and 1');
+    });
+
+    it('should throw error for invalid hue values in HSLA', () => {
+      expect(() => ColorConverter.parseHSLAString('hsla(361, 50%, 50%, 0.5)')).toThrow('Hue must be between 0 and 360');
+    });
+
+    it('should return null for negative values in HSLA', () => {
+      expect(ColorConverter.parseHSLAString('hsla(-1, 50%, 50%, 0.5)')).toBe(null);
     });
   });
 
@@ -316,7 +358,7 @@ describe('ColorConverter', () => {
       const result = ColorConverter.convert('rgba(255, 0, 0, 0.5)');
       expect(result.rgba).toBe('rgba(255, 0, 0, 0.5)');
       expect(result.hsla).toBe('hsla(0, 100%, 50%, 0.5)');
-      expect(result.hex).toBe('#ff0000'); // Alpha not included in hex
+      expect(result.hex).toBe('#ff000080'); // Alpha included in hex as 8-digit hex
     });
 
     it('should include raw values', () => {

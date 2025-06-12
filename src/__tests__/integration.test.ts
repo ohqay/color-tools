@@ -58,8 +58,8 @@ describe('Color Converter Integration Tests', () => {
       expect(result.rgba).toBe('rgba(255, 128, 64, 0.75)');
       expect(result.hsla).toContain('0.75');
       
-      // Verify non-alpha formats are still generated
-      expect(result.hex).toBe('#ff8040');
+      // Verify hex includes alpha as 8-digit hex
+      expect(result.hex).toBe('#ff8040bf');
       expect(result.rgb).toBe('rgb(255, 128, 64)');
       expect(result.hsl).toBeDefined();
       expect(result.hsb).toBeDefined();
@@ -71,6 +71,8 @@ describe('Color Converter Integration Tests', () => {
     const testCases = [
       { input: '#F0F', expected: 'hex', description: '3-digit hex' },
       { input: '#FF00FF', expected: 'hex', description: '6-digit hex' },
+      { input: '#F0F8', expected: 'hex', description: '4-digit hex with alpha' },
+      { input: '#FF00FF80', expected: 'hex', description: '8-digit hex with alpha' },
       { input: 'magenta', expected: 'hex', description: 'named color' },
       { input: 'rgb(255, 0, 255)', expected: 'rgb', description: 'RGB with parentheses' },
       { input: '255, 0, 255', expected: 'rgb', description: 'RGB without parentheses' },
@@ -233,6 +235,34 @@ describe('Color Converter Integration Tests', () => {
         const result = ColorConverter.convert(input);
         expect(result.hex).toBe('#ff0000');
       });
+    });
+  });
+
+  describe('Hex with alpha conversions', () => {
+    it('should handle 4-digit hex with alpha correctly', () => {
+      const result = ColorConverter.convert('#F0F8');
+      expect(result.hex).toBe('#ff00ff88');
+      expect(result.rgba).toBe('rgba(255, 0, 255, 0.5333333333333333)');
+      expect(result.hsla).toContain('0.5333333333333333');
+    });
+
+    it('should handle 8-digit hex with alpha correctly', () => {
+      const result = ColorConverter.convert('#FF00FF80');
+      expect(result.hex).toBe('#ff00ff80');
+      expect(result.rgba).toBe('rgba(255, 0, 255, 0.5019607843137255)');
+      expect(result.hsla).toContain('0.5019607843137255');
+    });
+
+    it('should convert between hex with alpha and RGBA correctly', () => {
+      // Start with 8-digit hex
+      const hex8 = '#D4C7BABF';
+      const result1 = ColorConverter.convert(hex8);
+      
+      // Convert the RGBA back to hex
+      const result2 = ColorConverter.convert(result1.rgba!);
+      
+      // Should get back to the same hex (allowing for rounding)
+      expect(result2.hex).toBe('#d4c7babf');
     });
   });
 

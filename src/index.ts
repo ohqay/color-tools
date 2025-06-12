@@ -5,12 +5,17 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { ColorConverter } from './colorConverter.js';
 import { ColorFormat } from './types.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { getAllPalettes, getPalette } from './resources/palettes.js';
+import { webSafeColorsResource } from './resources/webSafeColors.js';
+import { namedColorsResource } from './resources/namedColorsCategories.js';
 
 // Get package version dynamically
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +32,7 @@ const server = new Server(
   {
     capabilities: {
       tools: {},
+      resources: {},
     },
   }
 );
@@ -220,6 +226,126 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   throw new Error(`Unknown tool: ${request.params.name}`);
+});
+
+// Define the resources
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+  return {
+    resources: [
+      {
+        uri: 'color-palettes',
+        name: 'Available Color Palettes',
+        description: 'List of all available color palettes with their metadata',
+        mimeType: 'application/json',
+      },
+      {
+        uri: 'palette://material-design',
+        name: 'Material Design Colors',
+        description: 'Material Design color palette with all colors and shades',
+        mimeType: 'application/json',
+      },
+      {
+        uri: 'palette://tailwind',
+        name: 'Tailwind CSS Colors',
+        description: 'Tailwind CSS default color palette with extensive shades',
+        mimeType: 'application/json',
+      },
+      {
+        uri: 'colors://named',
+        name: 'CSS Named Colors',
+        description: 'All CSS named colors organized by category',
+        mimeType: 'application/json',
+      },
+      {
+        uri: 'colors://web-safe',
+        name: 'Web Safe Colors',
+        description: '216 web-safe colors that display consistently across browsers',
+        mimeType: 'application/json',
+      },
+    ],
+  };
+});
+
+// Handle resource reading
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  const { uri } = request.params;
+
+  try {
+    // Handle color-palettes resource
+    if (uri === 'color-palettes') {
+      const palettes = getAllPalettes();
+      const paletteInfo = {
+        palettes: palettes.map(p => ({
+          id: p.name.toLowerCase().replace(/\s+/g, '-'),
+          name: p.name,
+          description: p.description,
+          version: p.version,
+          colorCount: p.colors.length,
+          uri: `palette://${p.name.toLowerCase().replace(/\s+/g, '-')}`,
+        })),
+      };
+
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(paletteInfo, null, 2),
+          },
+        ],
+      };
+    }
+
+    // Handle specific palette resources
+    if (uri.startsWith('palette://')) {
+      const paletteName = uri.replace('palette://', '');
+      const palette = getPalette(paletteName);
+      
+      if (!palette) {
+        throw new Error(`Palette not found: ${paletteName}`);
+      }
+
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(palette, null, 2),
+          },
+        ],
+      };
+    }
+
+    // Handle named colors resource
+    if (uri === 'colors://named') {
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(namedColorsResource, null, 2),
+          },
+        ],
+      };
+    }
+
+    // Handle web-safe colors resource
+    if (uri === 'colors://web-safe') {
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(webSafeColorsResource, null, 2),
+          },
+        ],
+      };
+    }
+
+    throw new Error(`Unknown resource: ${uri}`);
+  } catch (error) {
+    throw new Error(`Failed to read resource ${uri}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 });
 
 // Start the server

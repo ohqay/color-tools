@@ -11,8 +11,8 @@ export class ColorConverter {
       return 'hex';
     }
     
-    // Hex format: #RGB, #RRGGBB
-    if (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(trimmed)) {
+    // Hex format: #RGB, #RGBA, #RRGGBB, #RRGGBBAA
+    if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(trimmed)) {
       return 'hex';
     }
     
@@ -93,38 +93,61 @@ export class ColorConverter {
     }
   }
 
-  // Hex to RGB
-  static hexToRGB(hex: string): RGB | null {
+  // Hex to RGB (with optional alpha)
+  static hexToRGB(hex: string): RGB | RGBA | null {
     const cleaned = hex.replace('#', '');
-    let r: number, g: number, b: number;
+    let r: number, g: number, b: number, a: number | undefined;
 
     if (cleaned.length === 3) {
+      // #RGB
       r = parseInt(cleaned[0] + cleaned[0], 16);
       g = parseInt(cleaned[1] + cleaned[1], 16);
       b = parseInt(cleaned[2] + cleaned[2], 16);
+    } else if (cleaned.length === 4) {
+      // #RGBA
+      r = parseInt(cleaned[0] + cleaned[0], 16);
+      g = parseInt(cleaned[1] + cleaned[1], 16);
+      b = parseInt(cleaned[2] + cleaned[2], 16);
+      a = parseInt(cleaned[3] + cleaned[3], 16) / 255; // Convert to 0-1 range
     } else if (cleaned.length === 6) {
+      // #RRGGBB
       r = parseInt(cleaned.substr(0, 2), 16);
       g = parseInt(cleaned.substr(2, 2), 16);
       b = parseInt(cleaned.substr(4, 2), 16);
+    } else if (cleaned.length === 8) {
+      // #RRGGBBAA
+      r = parseInt(cleaned.substr(0, 2), 16);
+      g = parseInt(cleaned.substr(2, 2), 16);
+      b = parseInt(cleaned.substr(4, 2), 16);
+      a = parseInt(cleaned.substr(6, 2), 16) / 255; // Convert to 0-1 range
     } else {
       return null;
     }
 
     // Check for NaN values (invalid hex characters)
-    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+    if (isNaN(r) || isNaN(g) || isNaN(b) || (a !== undefined && isNaN(a))) {
       return null;
     }
 
-    return { r, g, b };
+    return a !== undefined ? { r, g, b, a } : { r, g, b };
   }
 
-  // RGB to Hex
-  static rgbToHex(rgb: RGB): string {
+  // RGB to Hex (with optional alpha)
+  static rgbToHex(rgb: RGB | RGBA): string {
     const toHex = (n: number) => {
       const hex = Math.round(Math.max(0, Math.min(255, n))).toString(16);
       return hex.length === 1 ? '0' + hex : hex;
     };
-    return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+    
+    const hexColor = `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+    
+    // If alpha is present, convert from 0-1 to 00-FF and append
+    if ('a' in rgb && rgb.a !== undefined) {
+      const alphaHex = toHex(Math.round(rgb.a * 255));
+      return hexColor + alphaHex;
+    }
+    
+    return hexColor;
   }
 
   // RGB to HSL
@@ -470,7 +493,13 @@ export class ColorConverter {
     for (const format of targetFormats) {
       switch (format) {
         case 'hex':
-          result.hex = this.rgbToHex(rgb);
+          // If input has alpha, preserve it in hex output
+          if (hasAlpha && alpha !== undefined) {
+            const rgba: RGBA = { ...rgb, a: alpha };
+            result.hex = this.rgbToHex(rgba);
+          } else {
+            result.hex = this.rgbToHex(rgb);
+          }
           break;
         case 'rgb':
           result.rgb = this.formatRGB(rgb);
