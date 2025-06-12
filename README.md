@@ -15,7 +15,7 @@
    ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝╚══════╝
 ```
 
-A Model Context Protocol (MCP) server that provides color conversion capabilities between different color formats.
+A Model Context Protocol (MCP) server that enables Claude to work with colors. Convert between different color formats, generate color harmonies, and access popular color palettes.
 
 ## Features
 
@@ -51,8 +51,8 @@ A Model Context Protocol (MCP) server that provides color conversion capabilitie
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/ohqay/colour-tools.git
-cd colour-tools
+git clone https://github.com/ohqay/color-tools.git
+cd color-tools
 ```
 
 2. Install dependencies:
@@ -89,21 +89,21 @@ Add the following to your Claude Desktop configuration file:
 ```json
 {
   "mcpServers": {
-    "colour-tools": {
+    "color-tools": {
       "command": "node",
-      "args": ["/path/to/colour-tools/dist/index.js"]
+      "args": ["/path/to/color-tools/dist/index.js"]
     }
   }
 }
 ```
 
-Replace `/path/to/colour-tools` with the actual path to your installation.
+Replace `/path/to/color-tools` with the actual path to your installation.
 
 ### Using the Tools
 
 Once configured, you can use the tools in Claude:
 
-#### convert-colour
+#### convert-color
 ```
 Convert #D4C7BA to RGB format
 ```
@@ -140,7 +140,7 @@ Generate analogous colors from #4ECDC4 with 5 colors
 
 ## Tool Parameters
 
-### convert-colour
+### convert-color
 - `input` (required): The color value to convert
 - `from` (optional): Source format - if not specified, will auto-detect
 - `to` (optional): Array of target formats - if not specified, converts to all formats
@@ -389,57 +389,6 @@ Get the Material Design color palette
 Show me all CSS named colors
 ```
 
-## Development
-
-### Project Structure
-
-```
-colour-tools/
-├── src/
-│   ├── index.ts           # MCP server implementation
-│   ├── colorConverter.ts  # Color conversion algorithms
-│   ├── colorHarmony.ts    # Color harmony generation
-│   ├── types.ts          # TypeScript type definitions
-│   ├── namedColors.ts    # CSS named color definitions
-│   ├── __tests__/        # Test files
-│   │   ├── colorHarmony.test.ts   # Harmony generation tests
-│   │   └── ...           # Other test files
-│   └── resources/        # MCP resource data
-│       ├── palettes.ts            # Material Design & Tailwind palettes
-│       ├── webSafeColors.ts       # Web-safe color definitions
-│       └── namedColorsCategories.ts # Categorized named colors
-├── examples/
-│   └── color-harmony-example.ts   # Harmony usage examples
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-### Running Tests
-
-The project includes comprehensive unit tests with excellent coverage:
-
-```bash
-npm test                    # Run tests in watch mode
-npm test -- --run          # Run tests once
-npm test -- --coverage     # Run with coverage report
-```
-
-**Test Coverage**: 
-- Line Coverage: 99.65% ✅
-- Function Coverage: 100% ✅
-- Branch Coverage: 94.85% ✅
-- Total Tests: 184 tests across 7 test files
-
-Tests cover:
-- All color conversion functions
-- Format detection and parsing
-- Extended hex formats with alpha
-- Named color support
-- MCP server functionality
-- Resource handlers
-- Error handling and edge cases
-
 ## License
 
-MIT
+Open sourced under the MIT license.
