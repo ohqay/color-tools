@@ -62,9 +62,17 @@ mock.module('@modelcontextprotocol/sdk/types.js', () => ({
   ReadResourceRequestSchema: { name: 'ReadResourceRequestSchema' }
 }));
 
-// Import the server module once to register handlers
+// Import the server module and wait for initialization
 // This happens before any tests run
-await import('../index.js');
+let serverModule: any;
+const initializationPromise = import('../index.js').then((module) => {
+  serverModule = module;
+  // Give some time for the main() function to complete
+  return new Promise(resolve => setTimeout(resolve, 100));
+});
+
+// Wait for initialization to complete
+await initializationPromise;
 
 describe('MCP Server Handler Functions', () => {
   beforeEach(() => {
@@ -632,17 +640,17 @@ describe('MCP Server Handler Functions', () => {
   });
 
   describe('Server Connection and Main Function', () => {
-    it('should have connected server with transport', () => {
+    it('should connect server with transport', () => {
       // The server connection happens during module import at the top
       // We check that the mocks were called during initialization
-      expect(mockConnect.mock.calls.length).toBeGreaterThan(0);
-      expect(MockStdioServerTransport.mock.calls.length).toBeGreaterThan(0);
+      expect(mockConnect).toHaveBeenCalled();
+      expect(MockStdioServerTransport).toHaveBeenCalled();
     });
 
-    it('should have registered exactly 4 handlers', () => {
+    it('should register exactly 4 handlers', () => {
       // Handler registration happens during module import at the top
       // We check that the mock was called 4 times during initialization
-      expect(mockSetRequestHandler.mock.calls.length).toBe(4);
+      expect(mockSetRequestHandler).toHaveBeenCalledTimes(4);
     });
   });
 
