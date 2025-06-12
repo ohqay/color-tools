@@ -110,6 +110,11 @@ export class ColorConverter {
       return null;
     }
 
+    // Check for NaN values (invalid hex characters)
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+      return null;
+    }
+
     return { r, g, b };
   }
 
@@ -303,7 +308,11 @@ export class ColorConverter {
 
   // Parse RGB string
   static parseRGBString(input: string): RGB | null {
-    const match = input.match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    // Try to match both formats: "rgb(r, g, b)" and "r, g, b"
+    let match = input.match(/rgb\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/i);
+    if (!match) {
+      match = input.match(/^(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)$/);
+    }
     if (!match) return null;
 
     const r = parseInt(match[1]);
@@ -319,7 +328,7 @@ export class ColorConverter {
 
   // Parse RGBA string
   static parseRGBAString(input: string): RGBA | null {
-    const match = input.match(/rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/i);
+    const match = input.match(/rgba\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?[\d.]+)\s*\)/i);
     if (!match) return null;
 
     const r = parseInt(match[1]);
@@ -401,7 +410,7 @@ export class ColorConverter {
 
   // Parse CMYK string
   static parseCMYKString(input: string): CMYK | null {
-    const match = input.match(/(\d+)%?\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*(\d+)%?/);
+    const match = input.match(/(-?\d+)%?\s*,\s*(-?\d+)%?\s*,\s*(-?\d+)%?\s*,\s*(-?\d+)%?/);
     if (!match) return null;
 
     const c = parseInt(match[1]);
