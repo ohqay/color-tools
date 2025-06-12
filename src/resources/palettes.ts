@@ -672,21 +672,58 @@ export const tailwindPalette: PaletteCollection = {
   ],
 };
 
+// Optimized palette lookup using Map for O(1) access
+const paletteMap = new Map<string, PaletteCollection>();
+
+// Initialize palette map for fast lookups
+function initializePaletteMap() {
+  if (paletteMap.size === 0) {
+    const palettes = [materialDesignPalette, tailwindPalette];
+    for (const palette of palettes) {
+      const normalizedName = palette.name.toLowerCase().replace(/\s+/g, '-');
+      paletteMap.set(normalizedName, palette);
+      
+      // Add aliases for common variations
+      if (normalizedName === 'tailwind-css') {
+        paletteMap.set('tailwind', palette);
+      }
+      if (normalizedName === 'material-design') {
+        paletteMap.set('material', palette);
+        paletteMap.set('md', palette);
+      }
+    }
+  }
+}
+
 // Helper function to get all palettes
 export function getAllPalettes(): PaletteCollection[] {
   return [materialDesignPalette, tailwindPalette];
 }
 
-// Helper function to get a specific palette
+// Optimized helper function to get a specific palette
 export function getPalette(name: string): PaletteCollection | undefined {
-  const palettes = getAllPalettes();
-  return palettes.find(p => {
-    const normalizedPaletteName = p.name.toLowerCase().replace(/\s+/g, '-');
-    const normalizedSearchName = name.toLowerCase();
-    // Handle both 'tailwind' and 'tailwind-css'
-    if (normalizedPaletteName === 'tailwind-css' && normalizedSearchName === 'tailwind') {
-      return true;
-    }
-    return normalizedPaletteName === normalizedSearchName;
-  });
+  initializePaletteMap();
+  const normalizedName = name.toLowerCase().replace(/\s+/g, '-');
+  return paletteMap.get(normalizedName);
+}
+
+// Helper function to get a specific color from a palette
+export function getPaletteColor(paletteName: string, colorName: string, shade?: string): ColorShade | undefined {
+  const palette = getPalette(paletteName);
+  if (!palette) return undefined;
+  
+  const color = palette.colors.find(c => c.name.toLowerCase() === colorName.toLowerCase());
+  if (!color) return undefined;
+  
+  if (shade) {
+    return color.shades.find(s => s.name === shade);
+  }
+  
+  // Return the middle shade (500) if no specific shade requested
+  return color.shades.find(s => s.name === '500') || color.shades[Math.floor(color.shades.length / 2)];
+}
+
+// Clear palette cache (useful for testing)
+export function clearPaletteCache(): void {
+  paletteMap.clear();
 }

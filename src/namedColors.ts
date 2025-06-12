@@ -1,5 +1,5 @@
-// CSS named colors with their hex values
-export const NAMED_COLORS: Record<string, string> = {
+// CSS named colors with their hex values (as Record for static reference)
+const NAMED_COLORS_RECORD: Record<string, string> = {
   // Basic colors
   black: '#000000',
   white: '#ffffff',
@@ -159,3 +159,13 @@ export const NAMED_COLORS: Record<string, string> = {
   transparent: 'transparent',
   currentcolor: 'currentcolor',
 };
+
+// Optimized Map for faster lookups (O(1) average case) - used internally
+const NAMED_COLORS_MAP = new Map<string, string>(Object.entries(NAMED_COLORS_RECORD));
+
+// For external API compatibility, export both the record and the Map
+export const NAMED_COLORS = NAMED_COLORS_RECORD;
+export const NAMED_COLORS_MAP_INTERNAL = NAMED_COLORS_MAP;
+
+// Export the record for backwards compatibility
+export { NAMED_COLORS_RECORD };
