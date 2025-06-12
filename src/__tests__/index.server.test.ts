@@ -71,7 +71,7 @@ describe('MCP Server Handler Functions', () => {
     it('should return all available tools', async () => {
       const result = await mockListToolsHandler();
       
-      expect(result.tools).toHaveLength(9);
+      expect(result.tools).toHaveLength(8);
       expect(result.tools.map((t: any) => t.name)).toEqual([
         'convert-color',
         'color-info', 
@@ -80,8 +80,7 @@ describe('MCP Server Handler Functions', () => {
         'simulate-colorblind',
         'find-accessible-color',
         'mix-colors',
-        'convert-tailwind-color',
-        'get-performance-stats'
+        'convert-tailwind-color'
       ]);
     });
 

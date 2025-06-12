@@ -41,9 +41,11 @@ A Model Context Protocol (MCP) server that enables Claude to work with colors. C
 - Custom angle adjustments for fine-tuning harmonies
 - Comprehensive error handling with detailed validation messages
 - Includes `color-info` tool for server information and examples
+- Tailwind CSS V4 color conversion and search capabilities
 - MCP Resources for accessing color palettes and data:
   - Material Design color palette
-  - Tailwind CSS color palette
+  - Tailwind CSS V3 color palette
+  - Tailwind CSS V4 modernized OKLCH-based color palette
   - CSS named colors organized by category
   - Web-safe colors (216 colors)
 
@@ -138,6 +140,23 @@ Create a triadic harmony from blue in RGB format
 Generate analogous colors from #4ECDC4 with 5 colors
 ```
 
+#### convert-tailwind-color
+```
+Convert blue-500 to hex format
+```
+
+```
+Find the Tailwind color name for hex #3b82f6
+```
+
+```
+Get all shades of the blue color in RGB format
+```
+
+```
+Search for red colors in the Tailwind palette
+```
+
 ## Tool Parameters
 
 ### convert-color
@@ -157,6 +176,15 @@ No parameters required - returns server information and examples
   - `analogousCount`: Number of colors for analogous harmony (default: 3)
   - `analogousAngle`: Angle between analogous colors (default: 30)
 
+### convert-tailwind-color
+- `input` (required): The input to convert or search for
+- `operation` (required): Operation to perform:
+  - `to-hex` or `get-color`: Convert Tailwind color name (e.g., "blue-500") to hex value
+  - `from-hex`: Find Tailwind color name by hex value (e.g., "#3b82f6")
+  - `search`: Search for colors by name (e.g., "blue")
+  - `get-all-shades`: Get all shades of a color (e.g., "blue" returns blue-50 through blue-950)
+- `outputFormat` (optional): Format for output colors - defaults to `hex`
+
 ## MCP Resources
 
 The server provides the following resources that can be accessed via MCP ReadResource requests:
@@ -172,10 +200,13 @@ The server provides the following resources that can be accessed via MCP ReadRes
 3. **palette://tailwind** - Tailwind CSS color palette  
    - Tailwind CSS v3.0 default palette with 22 colors and extended shades (50-950)
 
-4. **colors://named** - CSS named colors organized by category
+4. **palette://tailwind-v4** - Tailwind CSS V4 modernized color palette
+   - Tailwind CSS v4.0 OKLCH-based palette with enhanced vibrancy and P3 color gamut support
+
+5. **colors://named** - CSS named colors organized by category
    - All 147 CSS named colors organized into categories like "Basic Colors", "Reds & Pinks", etc.
 
-5. **colors://web-safe** - Web-safe color palette
+6. **colors://web-safe** - Web-safe color palette
    - The 216 web-safe colors that display consistently across browsers, organized by hue
 
 ### Resource Response Format
@@ -387,6 +418,10 @@ Get the Material Design color palette
 
 ```
 Show me all CSS named colors
+```
+
+```
+Get the Tailwind V4 color palette
 ```
 
 ## License

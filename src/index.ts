@@ -362,23 +362,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['input', 'operation'],
         },
       },
-      {
-        name: 'get-performance-stats',
-        description: 'Get performance statistics and monitoring data for color operations',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            detailed: {
-              type: 'boolean',
-              description: 'Include detailed performance breakdown (default: false)',
-            },
-            minutesBack: {
-              type: 'number',
-              description: 'Number of minutes back to analyze (default: 5)',
-            },
-          },
-        },
-      },
     ],
   };
 });
@@ -759,23 +742,6 @@ const handleConvertTailwindColor = async (args: any) => {
   return createSuccessResponse(response);
 };
 
-const handleGetPerformanceStats = async (args: any) => {
-  const { detailed = false, minutesBack = 5 } = args as { detailed?: boolean; minutesBack?: number };
-  
-  const stats = detailed 
-    ? performanceMonitor.getRecentReport(minutesBack)
-    : { stats: performanceMonitor.getStats() };
-
-  const response = {
-    success: true,
-    performanceData: stats,
-    summary: performanceMonitor.getSummary(),
-    isPerformanceDegrading: performanceMonitor.isPerformanceDegrading(),
-    timestamp: Date.now()
-  };
-
-  return createSuccessResponse(response);
-};
 
 // Handle tool execution
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -797,8 +763,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await handleMixColors(args);
       case 'convert-tailwind-color':
         return await handleConvertTailwindColor(args);
-      case 'get-performance-stats':
-        return await handleGetPerformanceStats(args);
       case 'color-info':
         return handleColorInfo();
       default:
@@ -813,7 +777,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       'find-accessible-color': 'Please provide valid target and background colors in any supported format',
       'mix-colors': 'Please provide two valid colors in any supported format',
       'convert-tailwind-color': 'Please provide a valid input for the specified operation. For to-hex/get-color: use "blue-500" or "blue". For from-hex: use "#3b82f6". For search: use color name like "blue". For get-all-shades: use color name like "blue".',
-      'get-performance-stats': 'Performance statistics request failed. Optional parameters: detailed (boolean), minutesBack (number, default: 5)',
     };
     
     return createErrorResponse(error, errorHints[name] || 'Please check your input parameters');
