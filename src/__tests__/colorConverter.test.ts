@@ -408,4 +408,38 @@ describe('ColorConverter', () => {
       expect(ColorConverter.parseToRGB('DarkSlateGray')).toEqual({ r: 47, g: 79, b: 79 });
     });
   });
+
+  describe('LAB and XYZ in convert method', () => {
+    it('should convert to LAB and XYZ formats', () => {
+      const result = ColorConverter.convert('#FF0000', undefined, ['lab', 'xyz']);
+      expect(result.lab).toBeDefined();
+      expect(result.xyz).toBeDefined();
+      expect(result.lab).toMatch(/^lab\(/);
+      expect(result.xyz).toMatch(/^xyz\(/);
+    });
+
+    it('should include LAB and XYZ raw values', () => {
+      const result = ColorConverter.convert('#00FF00', undefined, ['lab', 'xyz']);
+      expect(result.rawValues?.lab).toBeDefined();
+      expect(result.rawValues?.xyz).toBeDefined();
+      expect(result.rawValues?.lab).toHaveProperty('l');
+      expect(result.rawValues?.lab).toHaveProperty('a');
+      expect(result.rawValues?.lab).toHaveProperty('b');
+      expect(result.rawValues?.xyz).toHaveProperty('x');
+      expect(result.rawValues?.xyz).toHaveProperty('y');
+      expect(result.rawValues?.xyz).toHaveProperty('z');
+    });
+
+    it('should convert LAB input to other formats', () => {
+      const result = ColorConverter.convert('lab(50%, 0, 0)', 'lab', ['hex', 'rgb']);
+      expect(result.hex).toBeDefined();
+      expect(result.rgb).toBeDefined();
+    });
+
+    it('should convert XYZ input to other formats', () => {
+      const result = ColorConverter.convert('xyz(50, 50, 50)', 'xyz', ['hex', 'rgb']);
+      expect(result.hex).toBeDefined();
+      expect(result.rgb).toBeDefined();
+    });
+  });
 });

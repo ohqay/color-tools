@@ -1,4 +1,4 @@
-import { RGB, RGBA, HSL, HSLA, HSB, CMYK, ColorFormat, ConversionResult } from './types.js';
+import { RGB, RGBA, HSL, HSLA, HSB, CMYK, LAB, XYZ, ColorFormat, ConversionResult, BlendMode, MixResult } from './types.js';
 import { NAMED_COLORS } from './namedColors.js';
 
 export class ColorConverter {
@@ -47,6 +47,16 @@ export class ColorConverter {
       return 'cmyk';
     }
     
+    // LAB format: lab(l%, a, b)
+    if (/^lab\s*\(\s*[\d.]+%?\s*,\s*-?[\d.]+\s*,\s*-?[\d.]+\s*\)$/i.test(trimmed)) {
+      return 'lab';
+    }
+    
+    // XYZ format: xyz(x, y, z)
+    if (/^xyz\s*\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*\)$/i.test(trimmed)) {
+      return 'xyz';
+    }
+    
     return null;
   }
 
@@ -88,6 +98,10 @@ export class ColorConverter {
         return this.hsbToRGB(this.parseHSBString(trimmed)!);
       case 'cmyk':
         return this.cmykToRGB(this.parseCMYKString(trimmed)!);
+      case 'lab':
+        return this.labToRGB(this.parseLABString(trimmed)!);
+      case 'xyz':
+        return this.xyzToRGB(this.parseXYZString(trimmed)!);
       default:
         return null;
     }
@@ -329,6 +343,123 @@ export class ColorConverter {
     };
   }
 
+  // RGB to XYZ (using sRGB color space with D65 illuminant)
+  static rgbToXYZ(rgb: RGB): XYZ {
+    // Convert RGB to linear RGB (remove gamma correction)
+    let r = rgb.r / 255;
+    let g = rgb.g / 255;
+    let b = rgb.b / 255;
+
+    // Apply gamma correction
+    r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+    g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+    b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+
+    // Scale by 100
+    r *= 100;
+    g *= 100;
+    b *= 100;
+
+    // Apply transformation matrix for D65 illuminant
+    const x = r * 0.4124564 + g * 0.3575761 + b * 0.1804375;
+    const y = r * 0.2126729 + g * 0.7151522 + b * 0.0721750;
+    const z = r * 0.0193339 + g * 0.1191920 + b * 0.9503041;
+
+    return {
+      x: Math.round(x * 1000) / 1000,
+      y: Math.round(y * 1000) / 1000,
+      z: Math.round(z * 1000) / 1000
+    };
+  }
+
+  // XYZ to RGB
+  static xyzToRGB(xyz: XYZ): RGB {
+    // Apply inverse transformation matrix
+    let r = xyz.x * 3.2404542 - xyz.y * 1.5371385 - xyz.z * 0.4985314;
+    let g = -xyz.x * 0.9692660 + xyz.y * 1.8760108 + xyz.z * 0.0415560;
+    let b = xyz.x * 0.0556434 - xyz.y * 0.2040259 + xyz.z * 1.0572252;
+
+    // Scale from 100 to 1
+    r /= 100;
+    g /= 100;
+    b /= 100;
+
+    // Apply gamma correction
+    r = r > 0.0031308 ? 1.055 * Math.pow(r, 1 / 2.4) - 0.055 : 12.92 * r;
+    g = g > 0.0031308 ? 1.055 * Math.pow(g, 1 / 2.4) - 0.055 : 12.92 * g;
+    b = b > 0.0031308 ? 1.055 * Math.pow(b, 1 / 2.4) - 0.055 : 12.92 * b;
+
+    // Clamp and scale to 0-255
+    return {
+      r: Math.round(Math.max(0, Math.min(255, r * 255))),
+      g: Math.round(Math.max(0, Math.min(255, g * 255))),
+      b: Math.round(Math.max(0, Math.min(255, b * 255)))
+    };
+  }
+
+  // XYZ to LAB (using D65 reference white)
+  static xyzToLAB(xyz: XYZ): LAB {
+    // D65 reference white
+    const xn = 95.047;
+    const yn = 100.000;
+    const zn = 108.883;
+
+    // Normalize
+    let x = xyz.x / xn;
+    let y = xyz.y / yn;
+    let z = xyz.z / zn;
+
+    // Apply function f
+    const fx = x > 0.008856 ? Math.pow(x, 1/3) : (7.787 * x + 16/116);
+    const fy = y > 0.008856 ? Math.pow(y, 1/3) : (7.787 * y + 16/116);
+    const fz = z > 0.008856 ? Math.pow(z, 1/3) : (7.787 * z + 16/116);
+
+    const l = 116 * fy - 16;
+    const a = 500 * (fx - fy);
+    const b = 200 * (fy - fz);
+
+    return {
+      l: Math.round(l * 100) / 100,
+      a: Math.round(a * 100) / 100,
+      b: Math.round(b * 100) / 100
+    };
+  }
+
+  // LAB to XYZ
+  static labToXYZ(lab: LAB): XYZ {
+    // D65 reference white
+    const xn = 95.047;
+    const yn = 100.000;
+    const zn = 108.883;
+
+    const fy = (lab.l + 16) / 116;
+    const fx = lab.a / 500 + fy;
+    const fz = fy - lab.b / 200;
+
+    // Apply inverse function f
+    const x = fx * fx * fx > 0.008856 ? fx * fx * fx : (fx - 16/116) / 7.787;
+    const y = fy * fy * fy > 0.008856 ? fy * fy * fy : (fy - 16/116) / 7.787;
+    const z = fz * fz * fz > 0.008856 ? fz * fz * fz : (fz - 16/116) / 7.787;
+
+    return {
+      x: Math.round(x * xn * 1000) / 1000,
+      y: Math.round(y * yn * 1000) / 1000,
+      z: Math.round(z * zn * 1000) / 1000
+    };
+  }
+
+  // RGB to LAB (convenience method)
+  static rgbToLAB(rgb: RGB): LAB {
+    const xyz = this.rgbToXYZ(rgb);
+    return this.xyzToLAB(xyz);
+  }
+
+  // LAB to RGB (convenience method)
+  static labToRGB(lab: LAB): RGB {
+    const xyz = this.labToXYZ(lab);
+    return this.xyzToRGB(xyz);
+  }
+
   // Parse RGB string
   static parseRGBString(input: string): RGB | null {
     // Try to match both formats: "rgb(r, g, b)" and "r, g, b"
@@ -448,6 +579,44 @@ export class ColorConverter {
     return { c, m, y, k };
   }
 
+  // Parse LAB string
+  static parseLABString(input: string): LAB | null {
+    const match = input.match(/lab\s*\(\s*(-?[\d.]+)%?\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/i);
+    if (!match) return null;
+
+    const l = parseFloat(match[1]);
+    const a = parseFloat(match[2]);
+    const b = parseFloat(match[3]);
+
+    if (l > 100 || l < 0) {
+      throw new Error(`LAB L* value must be between 0 and 100. Got: ${l}`);
+    }
+
+    // a* and b* typically range from -128 to 127, but we'll be more permissive
+    if (Math.abs(a) > 128 || Math.abs(b) > 128) {
+      throw new Error(`LAB a* and b* values typically range from -128 to 127. Got: a=${a}, b=${b}`);
+    }
+
+    return { l, a, b };
+  }
+
+  // Parse XYZ string
+  static parseXYZString(input: string): XYZ | null {
+    const match = input.match(/xyz\s*\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/i);
+    if (!match) return null;
+
+    const x = parseFloat(match[1]);
+    const y = parseFloat(match[2]);
+    const z = parseFloat(match[3]);
+
+    // XYZ values for D65 illuminant typically range: X(0-95.047), Y(0-100), Z(0-108.883)
+    if (x < 0 || y < 0 || z < 0) {
+      throw new Error(`XYZ values must be non-negative. Got: x=${x}, y=${y}, z=${z}`);
+    }
+
+    return { x, y, z };
+  }
+
   // Format output strings
   static formatRGB(rgb: RGB): string {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
@@ -473,6 +642,18 @@ export class ColorConverter {
     return `cmyk(${cmyk.c}%, ${cmyk.m}%, ${cmyk.y}%, ${cmyk.k}%)`;
   }
 
+  static formatLAB(lab: LAB): string {
+    // Round to 2 decimal places to avoid floating point precision issues
+    const l = Math.round(lab.l * 100) / 100;
+    const a = Math.round(lab.a * 100) / 100;
+    const b = Math.round(lab.b * 100) / 100;
+    return `lab(${l}%, ${a}, ${b})`;
+  }
+
+  static formatXYZ(xyz: XYZ): string {
+    return `xyz(${xyz.x}, ${xyz.y}, ${xyz.z})`;
+  }
+
   // Main conversion method
   static convert(input: string, from?: ColorFormat, to?: ColorFormat[]): ConversionResult {
     // Parse input to RGB/RGBA
@@ -487,7 +668,7 @@ export class ColorConverter {
     const alpha = hasAlpha ? (rgbOrRgba as RGBA).a : undefined;
 
     // If no target formats specified, return all
-    const targetFormats = to || ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk'];
+    const targetFormats = to || ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk', 'lab', 'xyz'];
     const result: ConversionResult = { rawValues: { rgb } };
 
     for (const format of targetFormats) {
@@ -536,9 +717,105 @@ export class ColorConverter {
           result.cmyk = this.formatCMYK(cmyk);
           result.rawValues!.cmyk = cmyk;
           break;
+        case 'lab':
+          const lab = this.rgbToLAB(rgb);
+          result.lab = this.formatLAB(lab);
+          result.rawValues!.lab = lab;
+          break;
+        case 'xyz':
+          const xyz = this.rgbToXYZ(rgb);
+          result.xyz = this.formatXYZ(xyz);
+          result.rawValues!.xyz = xyz;
+          break;
       }
     }
 
+    return result;
+  }
+
+  // Mix two colors in LAB space (perceptually uniform)
+  static mixColors(color1: string, color2: string, ratio: number = 0.5, mode: BlendMode = 'normal'): MixResult {
+    // Parse both colors to RGB
+    const rgb1 = this.parseToRGB(color1);
+    const rgb2 = this.parseToRGB(color2);
+    
+    if (!rgb1 || !rgb2) {
+      throw new Error('Invalid color format');
+    }
+
+    // Handle blend modes
+    let mixedRgb: RGB;
+    
+    switch (mode) {
+      case 'normal':
+        // Mix in LAB space for perceptually uniform results
+        const lab1 = this.rgbToLAB(rgb1);
+        const lab2 = this.rgbToLAB(rgb2);
+        
+        const mixedLab: LAB = {
+          l: lab1.l * (1 - ratio) + lab2.l * ratio,
+          a: lab1.a * (1 - ratio) + lab2.a * ratio,
+          b: lab1.b * (1 - ratio) + lab2.b * ratio
+        };
+        
+        mixedRgb = this.labToRGB(mixedLab);
+        break;
+        
+      case 'multiply':
+        mixedRgb = {
+          r: Math.round((rgb1.r * rgb2.r) / 255),
+          g: Math.round((rgb1.g * rgb2.g) / 255),
+          b: Math.round((rgb1.b * rgb2.b) / 255)
+        };
+        break;
+        
+      case 'screen':
+        mixedRgb = {
+          r: Math.round(255 - ((255 - rgb1.r) * (255 - rgb2.r)) / 255),
+          g: Math.round(255 - ((255 - rgb1.g) * (255 - rgb2.g)) / 255),
+          b: Math.round(255 - ((255 - rgb1.b) * (255 - rgb2.b)) / 255)
+        };
+        break;
+        
+      case 'overlay':
+        const overlay = (base: number, blend: number) => {
+          return base < 128
+            ? (2 * base * blend) / 255
+            : 255 - (2 * (255 - base) * (255 - blend)) / 255;
+        };
+        
+        mixedRgb = {
+          r: Math.round(overlay(rgb1.r, rgb2.r)),
+          g: Math.round(overlay(rgb1.g, rgb2.g)),
+          b: Math.round(overlay(rgb1.b, rgb2.b))
+        };
+        break;
+        
+      default:
+        throw new Error(`Unknown blend mode: ${mode}`);
+    }
+
+    // Handle alpha channel if present
+    let mixedAlpha: number | undefined;
+    if ('a' in rgb1 && 'a' in rgb2) {
+      mixedAlpha = (rgb1 as RGBA).a * (1 - ratio) + (rgb2 as RGBA).a * ratio;
+      // Round to avoid floating point precision issues
+      mixedAlpha = Math.round(mixedAlpha * 10000) / 10000;
+    } else if ('a' in rgb1) {
+      mixedAlpha = (rgb1 as RGBA).a;
+    } else if ('a' in rgb2) {
+      mixedAlpha = (rgb2 as RGBA).a;
+    }
+
+    // Convert the mixed color to all formats
+    const mixedColor = mixedAlpha !== undefined
+      ? this.rgbToHex({ ...mixedRgb, a: mixedAlpha })
+      : this.rgbToHex(mixedRgb);
+    
+    const result = this.convert(mixedColor) as MixResult;
+    result.mixRatio = ratio;
+    result.mode = mode;
+    
     return result;
   }
 }

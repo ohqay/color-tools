@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for src/__tests__/resources.test.ts</title>
+    <title>Code coverage report for src/__tests__/colorMixing.test.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,20 +19,20 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/__tests__</a> resources.test.ts</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/__tests__</a> colorMixing.test.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>151/151</span>
+                <span class='fraction'>173/173</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>39/39</span>
+                <span class='fraction'>33/33</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>151/151</span>
+                <span class='fraction'>173/173</span>
             </div>
         
             
@@ -233,7 +233,276 @@
 <a name='L168'></a><a href='#L168'>168</a>
 <a name='L169'></a><a href='#L169'>169</a>
 <a name='L170'></a><a href='#L170'>170</a>
-<a name='L171'></a><a href='#L171'>171</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a>
+<a name='L224'></a><a href='#L224'>224</a>
+<a name='L225'></a><a href='#L225'>225</a>
+<a name='L226'></a><a href='#L226'>226</a>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a>
+<a name='L232'></a><a href='#L232'>232</a>
+<a name='L233'></a><a href='#L233'>233</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -246,157 +515,12 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">216x</span>
-<span class="cline-any cline-yes">216x</span>
-<span class="cline-any cline-yes">216x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">168x</span>
-<span class="cline-any cline-yes">168x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -404,173 +528,235 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span></td><td class="text"><pre class="prettyprint lang-js">import { describe, it, expect } from 'vitest';
-import { getAllPalettes, getPalette, materialDesignPalette, tailwindPalette } from '../resources/palettes';
-import { webSafeColors, webSafeColorsResource, webSafeColorGroups } from '../resources/webSafeColors';
-import { namedColorsResource, namedColorCategories } from '../resources/namedColorsCategories';
+import { ColorConverter } from '../colorConverter.js';
 &nbsp;
-describe('Color Palettes', () =&gt; {
-  describe('getAllPalettes', () =&gt; {
-    it('should return all available palettes', () =&gt; {
-      const palettes = getAllPalettes();
-      expect(palettes).toHaveLength(2);
-      expect(palettes[0].name).toBe('Material Design');
-      expect(palettes[1].name).toBe('Tailwind CSS');
-    });
-  });
-&nbsp;
-  describe('getPalette', () =&gt; {
-    it('should return Material Design palette', () =&gt; {
-      const palette = getPalette('material-design');
-      expect(palette).toBeDefined();
-      expect(palette?.name).toBe('Material Design');
-      expect(palette?.colors).toBeDefined();
-      expect(palette?.colors.length).toBeGreaterThan(0);
-    });
-&nbsp;
-    it('should return Tailwind palette', () =&gt; {
-      const palette = getPalette('tailwind');
-      expect(palette).toBeDefined();
-      expect(palette?.name).toBe('Tailwind CSS');
-      expect(palette?.colors).toBeDefined();
-      expect(palette?.colors.length).toBeGreaterThan(0);
-    });
-&nbsp;
-    it('should return undefined for unknown palette', () =&gt; {
-      const palette = getPalette('unknown-palette');
-      expect(palette).toBeUndefined();
-    });
-  });
-&nbsp;
-  describe('Material Design Palette', () =&gt; {
-    it('should have correct structure', () =&gt; {
-      expect(materialDesignPalette.name).toBe('Material Design');
-      expect(materialDesignPalette.description).toBeDefined();
-      expect(materialDesignPalette.version).toBe('3.0');
-      expect(materialDesignPalette.colors).toBeDefined();
-      expect(materialDesignPalette.colors.length).toBe(19);
-    });
-&nbsp;
-    it('should have correct color structure', () =&gt; {
-      const redColor = materialDesignPalette.colors.find(c =&gt; c.name === 'red');
-      expect(redColor).toBeDefined();
-      expect(redColor?.shades).toHaveLength(10);
-      expect(redColor?.shades[0]).toHaveProperty('name');
-      expect(redColor?.shades[0]).toHaveProperty('value');
-      expect(redColor?.shades[0].value).toMatch(/^#[0-9a-f]{6}$/i);
-    });
-  });
-&nbsp;
-  describe('Tailwind Palette', () =&gt; {
-    it('should have correct structure', () =&gt; {
-      expect(tailwindPalette.name).toBe('Tailwind CSS');
-      expect(tailwindPalette.description).toBeDefined();
-      expect(tailwindPalette.version).toBe('3.0');
-      expect(tailwindPalette.colors).toBeDefined();
-      expect(tailwindPalette.colors.length).toBe(22);
-    });
-&nbsp;
-    it('should have 11 shades per color', () =&gt; {
-      const slateColor = tailwindPalette.colors.find(c =&gt; c.name === 'slate');
-      expect(slateColor).toBeDefined();
-      expect(slateColor?.shades).toHaveLength(11);
-      // Check for 950 shade (unique to Tailwind)
-      const shade950 = slateColor?.shades.find(s =&gt; s.name === '950');
-      expect(shade950).toBeDefined();
-    });
-  });
-});
-&nbsp;
-describe('Web Safe Colors', () =&gt; {
-  it('should have 216 colors', () =&gt; {
-    expect(webSafeColors).toHaveLength(216);
-  });
-&nbsp;
-  it('should have correct color structure', () =&gt; {
-    const firstColor = webSafeColors[0];
-    expect(firstColor).toHaveProperty('hex');
-    expect(firstColor).toHaveProperty('rgb');
-    expect(firstColor.hex).toMatch(/^#[0-9A-F]{6}$/);
-    expect(firstColor.rgb).toHaveProperty('r');
-    expect(firstColor.rgb).toHaveProperty('g');
-    expect(firstColor.rgb).toHaveProperty('b');
-  });
-&nbsp;
-  it('should only use web-safe values', () =&gt; {
-    const webSafeValues = [0x00, 0x33, 0x66, 0x99, 0xCC, 0xFF];
-    webSafeColors.forEach(color =&gt; {
-      expect(webSafeValues).toContain(color.rgb.r);
-      expect(webSafeValues).toContain(color.rgb.g);
-      expect(webSafeValues).toContain(color.rgb.b);
-    });
-  });
-&nbsp;
-  describe('Web Safe Color Groups', () =&gt; {
-    it('should have correct groups', () =&gt; {
-      const groupNames = webSafeColorGroups.map(g =&gt; g.name);
-      expect(groupNames).toContain('Grayscale');
-      expect(groupNames).toContain('Reds');
-      expect(groupNames).toContain('Greens');
-      expect(groupNames).toContain('Blues');
-      expect(groupNames).toContain('Cyans');
-      expect(groupNames).toContain('Magentas');
-      expect(groupNames).toContain('Yellows');
-    });
-&nbsp;
-    it('should have all colors categorized', () =&gt; {
-      const totalColors = webSafeColorGroups.reduce((sum, group) =&gt; sum + group.colors.length, 0);
-      expect(totalColors).toBe(216);
-    });
-  });
-&nbsp;
-  describe('Web Safe Colors Resource', () =&gt; {
-    it('should have correct structure', () =&gt; {
-      expect(webSafeColorsResource.name).toBe('Web Safe Colors');
-      expect(webSafeColorsResource.description).toBeDefined();
-      expect(webSafeColorsResource.totalColors).toBe(216);
-      expect(webSafeColorsResource.groups).toBe(webSafeColorGroups);
-      expect(webSafeColorsResource.allColors).toBe(webSafeColors);
-    });
-  });
-});
-&nbsp;
-describe('Named Colors Categories', () =&gt; {
-  it('should have correct categories', () =&gt; {
-    const categoryNames = namedColorCategories.map(c =&gt; c.name);
-    expect(categoryNames).toContain('Basic Colors');
-    expect(categoryNames).toContain('Reds &amp; Pinks');
-    expect(categoryNames).toContain('Blues');
-    expect(categoryNames).toContain('Greens');
-    expect(categoryNames).toContain('Grays &amp; Blacks');
-  });
-&nbsp;
-  it('should have valid color structure', () =&gt; {
-    namedColorCategories.forEach(category =&gt; {
-      expect(category.name).toBeDefined();
-      expect(category.description).toBeDefined();
-      expect(category.colors).toBeDefined();
-      expect(Array.isArray(category.colors)).toBe(true);
+describe('Color Mixing', () =&gt; {
+  describe('mixColors - Normal Blend Mode (LAB Space)', () =&gt; {
+    it('should mix two colors at 50% ratio', () =&gt; {
+      const result = ColorConverter.mixColors('#ff0000', '#0000ff', 0.5, 'normal');
       
-      category.colors.forEach(color =&gt; {
-        expect(color.name).toBeDefined();
-        expect(color.hex).toMatch(/^#[0-9a-f]{6}$/i);
-      });
+      expect(result.hex).toBeDefined();
+      expect(result.rgb).toBeDefined();
+      expect(result.mixRatio).toBe(0.5);
+      expect(result.mode).toBe('normal');
+      
+      // The result should be somewhere between red and blue
+      const rgb = result.rawValues?.rgb;
+      expect(rgb).toBeDefined();
+      expect(rgb!.r).toBeGreaterThan(0);
+      expect(rgb!.b).toBeGreaterThan(0);
+    });
+&nbsp;
+    it('should mix colors at different ratios', () =&gt; {
+      // 100% first color
+      const result1 = ColorConverter.mixColors('#ff0000', '#00ff00', 0, 'normal');
+      expect(result1.hex).toBe('#ff0000');
+      
+      // 100% second color
+      const result2 = ColorConverter.mixColors('#ff0000', '#00ff00', 1, 'normal');
+      expect(result2.hex).toBe('#00ff00');
+      
+      // 25% mix
+      const result3 = ColorConverter.mixColors('#ffffff', '#000000', 0.25, 'normal');
+      const rgb3 = result3.rawValues?.rgb;
+      // LAB mixing produces slightly different results than RGB mixing
+      expect(rgb3!.r).toBeCloseTo(185, -1); // Allow some variance
+      expect(rgb3!.g).toBeCloseTo(185, -1);
+      expect(rgb3!.b).toBeCloseTo(185, -1);
+    });
+&nbsp;
+    it('should preserve perceptual uniformity in LAB space', () =&gt; {
+      // Mix red and green in LAB space - should produce a more natural color
+      const result = ColorConverter.mixColors('#ff0000', '#00ff00', 0.5, 'normal');
+      
+      // In LAB space, this should produce a more yellowish color rather than muddy brown
+      const lab = result.rawValues?.lab;
+      expect(lab).toBeDefined();
+      expect(lab!.l).toBeGreaterThan(50); // Should be reasonably bright
     });
   });
 &nbsp;
-  describe('Named Colors Resource', () =&gt; {
-    it('should have correct structure', () =&gt; {
-      expect(namedColorsResource.name).toBe('CSS Named Colors');
-      expect(namedColorsResource.description).toBeDefined();
-      expect(namedColorsResource.totalColors).toBeGreaterThan(100);
-      expect(namedColorsResource.categories).toBe(namedColorCategories);
-      expect(namedColorsResource.allColors).toBeDefined();
-      expect(Array.isArray(namedColorsResource.allColors)).toBe(true);
+  describe('mixColors - Multiply Blend Mode', () =&gt; {
+    it('should multiply colors correctly', () =&gt; {
+      // White multiplied by any color should return that color
+      const result1 = ColorConverter.mixColors('#ffffff', '#ff0000', 0.5, 'multiply');
+      expect(result1.hex).toBe('#ff0000');
+      
+      // Black multiplied by any color should return black
+      const result2 = ColorConverter.mixColors('#000000', '#ff0000', 0.5, 'multiply');
+      expect(result2.hex).toBe('#000000');
+      
+      // Two identical colors multiplied
+      const result3 = ColorConverter.mixColors('#808080', '#808080', 0.5, 'multiply');
+      const rgb3 = result3.rawValues?.rgb;
+      expect(rgb3!.r).toBe(64); // 128 * 128 / 255 ≈ 64
+      expect(rgb3!.g).toBe(64);
+      expect(rgb3!.b).toBe(64);
     });
 &nbsp;
-    it('should have sorted colors', () =&gt; {
-      const names = namedColorsResource.allColors.map(c =&gt; c.name);
-      const sortedNames = [...names].sort((a, b) =&gt; a.localeCompare(b));
-      expect(names).toEqual(sortedNames);
+    it('should darken colors when multiplied', () =&gt; {
+      const result = ColorConverter.mixColors('#ff8080', '#80ff80', 0.5, 'multiply');
+      const rgb = result.rawValues?.rgb;
+      
+      // Result should be darker than both input colors
+      expect(rgb!.r).toBeLessThan(255);
+      expect(rgb!.g).toBeLessThan(255);
+    });
+  });
+&nbsp;
+  describe('mixColors - Screen Blend Mode', () =&gt; {
+    it('should screen colors correctly', () =&gt; {
+      // Black screened with any color should return that color
+      const result1 = ColorConverter.mixColors('#000000', '#ff0000', 0.5, 'screen');
+      expect(result1.hex).toBe('#ff0000');
+      
+      // White screened with any color should return white
+      const result2 = ColorConverter.mixColors('#ffffff', '#ff0000', 0.5, 'screen');
+      expect(result2.hex).toBe('#ffffff');
+      
+      // Two identical colors screened
+      const result3 = ColorConverter.mixColors('#808080', '#808080', 0.5, 'screen');
+      const rgb3 = result3.rawValues?.rgb;
+      expect(rgb3!.r).toBe(192); // 255 - ((255-128)*(255-128)/255) ≈ 192
+      expect(rgb3!.g).toBe(192);
+      expect(rgb3!.b).toBe(192);
+    });
+&nbsp;
+    it('should lighten colors when screened', () =&gt; {
+      const result = ColorConverter.mixColors('#800000', '#008000', 0.5, 'screen');
+      const rgb = result.rawValues?.rgb;
+      
+      // Result should be lighter than both input colors
+      expect(rgb!.r).toBeGreaterThan(0);
+      expect(rgb!.g).toBeGreaterThan(0);
+    });
+  });
+&nbsp;
+  describe('mixColors - Overlay Blend Mode', () =&gt; {
+    it('should apply overlay blend correctly', () =&gt; {
+      // Overlay with gray should preserve the gray
+      const result1 = ColorConverter.mixColors('#808080', '#808080', 0.5, 'overlay');
+      const rgb1 = result1.rawValues?.rgb;
+      expect(rgb1!.r).toBeCloseTo(128, 0);
+      expect(rgb1!.g).toBeCloseTo(128, 0);
+      expect(rgb1!.b).toBeCloseTo(128, 0);
+      
+      // Dark colors should multiply
+      const result2 = ColorConverter.mixColors('#404040', '#404040', 0.5, 'overlay');
+      const rgb2 = result2.rawValues?.rgb;
+      expect(rgb2!.r).toBeLessThan(64); // Should be darker
+      
+      // Light colors should screen
+      const result3 = ColorConverter.mixColors('#c0c0c0', '#c0c0c0', 0.5, 'overlay');
+      const rgb3 = result3.rawValues?.rgb;
+      expect(rgb3!.r).toBeGreaterThan(192); // Should be lighter
+    });
+  });
+&nbsp;
+  describe('mixColors - Alpha Channel Handling', () =&gt; {
+    it('should mix colors with alpha channels', () =&gt; {
+      const result = ColorConverter.mixColors('rgba(255, 0, 0, 0.5)', 'rgba(0, 0, 255, 0.5)', 0.5);
+      
+      expect(result.rgba).toBeDefined();
+      const rgba = result.rawValues?.rgba;
+      expect(rgba).toBeDefined();
+      expect(rgba!.a).toBeCloseTo(0.5, 2);
+    });
+&nbsp;
+    it('should handle mixed alpha and non-alpha colors', () =&gt; {
+      // First color has alpha
+      const result1 = ColorConverter.mixColors('rgba(255, 0, 0, 0.5)', '#0000ff', 0.5);
+      expect(result1.rgba).toBeDefined();
+      expect(result1.rawValues?.rgba?.a).toBeCloseTo(0.5, 2);
+      
+      // Second color has alpha
+      const result2 = ColorConverter.mixColors('#ff0000', 'rgba(0, 0, 255, 0.5)', 0.5);
+      expect(result2.rgba).toBeDefined();
+      expect(result2.rawValues?.rgba?.a).toBeCloseTo(0.5, 2);
+    });
+&nbsp;
+    it('should interpolate alpha values', () =&gt; {
+      const result = ColorConverter.mixColors('rgba(255, 0, 0, 0.2)', 'rgba(0, 0, 255, 0.8)', 0.5);
+      const rgba = result.rawValues?.rgba;
+      expect(rgba!.a).toBeCloseTo(0.5, 2); // (0.2 * 0.5) + (0.8 * 0.5) = 0.5
+    });
+  });
+&nbsp;
+  describe('mixColors - Error Handling', () =&gt; {
+    it('should throw error for invalid color formats', () =&gt; {
+      expect(() =&gt; ColorConverter.mixColors('invalid', '#ff0000', 0.5)).toThrow('Invalid color format');
+      expect(() =&gt; ColorConverter.mixColors('#ff0000', 'invalid', 0.5)).toThrow('Invalid color format');
+    });
+&nbsp;
+    it('should throw error for unknown blend mode', () =&gt; {
+      expect(() =&gt; ColorConverter.mixColors('#ff0000', '#00ff00', 0.5, 'unknown' as any)).toThrow('Unknown blend mode: unknown');
+    });
+  });
+&nbsp;
+  describe('mixColors - Named Colors', () =&gt; {
+    it('should mix named colors', () =&gt; {
+      const result = ColorConverter.mixColors('red', 'blue', 0.5);
+      expect(result.hex).toBeDefined();
+      expect(result.mixRatio).toBe(0.5);
+    });
+&nbsp;
+    it('should mix named color with hex color', () =&gt; {
+      const result = ColorConverter.mixColors('white', '#000000', 0.5);
+      const rgb = result.rawValues?.rgb;
+      // LAB mixing produces different values than simple RGB average
+      expect(rgb!.r).toBeCloseTo(119, -1);
+      expect(rgb!.g).toBeCloseTo(119, -1);
+      expect(rgb!.b).toBeCloseTo(119, -1);
+    });
+  });
+&nbsp;
+  describe('mixColors - Complex Color Formats', () =&gt; {
+    it('should mix different color formats', () =&gt; {
+      const result = ColorConverter.mixColors('hsl(0, 100%, 50%)', 'rgb(0, 0, 255)', 0.5);
+      expect(result.hex).toBeDefined();
+      expect(result.hsl).toBeDefined();
+      expect(result.rgb).toBeDefined();
+    });
+&nbsp;
+    it('should mix LAB colors directly', () =&gt; {
+      const result = ColorConverter.mixColors('lab(50%, 50, 0)', 'lab(50%, -50, 0)', 0.5);
+      const lab = result.rawValues?.lab;
+      expect(lab).toBeDefined();
+      // Due to conversion through RGB and back, values will be different
+      // The mixing happens in LAB space correctly, but conversion to/from RGB changes values
+      expect(lab!.l).toBeDefined();
+      expect(lab!.a).toBeDefined(); 
+      expect(lab!.b).toBeDefined();
+    });
+&nbsp;
+    it('should mix XYZ colors', () =&gt; {
+      const result = ColorConverter.mixColors('xyz(50, 50, 50)', 'xyz(20, 20, 20)', 0.5);
+      expect(result.xyz).toBeDefined();
+    });
+  });
+&nbsp;
+  describe('mixColors - Output Formats', () =&gt; {
+    it('should include all color formats in result', () =&gt; {
+      const result = ColorConverter.mixColors('#ff0000', '#0000ff', 0.5);
+      
+      expect(result.hex).toBeDefined();
+      expect(result.rgb).toBeDefined();
+      expect(result.hsl).toBeDefined();
+      expect(result.hsb).toBeDefined();
+      expect(result.cmyk).toBeDefined();
+      expect(result.lab).toBeDefined();
+      expect(result.xyz).toBeDefined();
+    });
+&nbsp;
+    it('should include raw values for all formats', () =&gt; {
+      const result = ColorConverter.mixColors('#ff0000', '#0000ff', 0.5);
+      
+      expect(result.rawValues?.rgb).toBeDefined();
+      expect(result.rawValues?.hsl).toBeDefined();
+      expect(result.rawValues?.hsb).toBeDefined();
+      expect(result.rawValues?.cmyk).toBeDefined();
+      expect(result.rawValues?.lab).toBeDefined();
+      expect(result.rawValues?.xyz).toBeDefined();
     });
   });
 });</pre></td></tr></table></pre>

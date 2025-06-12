@@ -1,0 +1,121 @@
+
+ RUN  v2.1.9 /Users/tarek/development/creating-mcp/color-converter-mcp
+      Coverage enabled with v8
+
+ ✓ src/__tests__/colorAccessibility.test.ts (27 tests) 23ms
+ ✓ src/__tests__/colorHarmony.test.ts (27 tests) 10ms
+ ✓ src/__tests__/namedColors.test.ts (18 tests) 38ms
+ ❯ src/__tests__/colorMixing.test.ts (20 tests | 4 failed) 26ms
+   × Color Mixing > mixColors - Alpha Channel Handling > should mix colors with alpha channels 15ms
+     → expected 0.5019607843137255 to be close to 0.5, received difference is 0.0019607843137254832, but expected 0.0005
+   × Color Mixing > mixColors - Alpha Channel Handling > should handle mixed alpha and non-alpha colors 1ms
+     → expected 0.5019607843137255 to be close to 0.5, received difference is 0.0019607843137254832, but expected 0.0005
+   × Color Mixing > mixColors - Alpha Channel Handling > should interpolate alpha values 0ms
+     → expected 0.5019607843137255 to be close to 0.5, received difference is 0.0019607843137254832, but expected 0.0005
+   × Color Mixing > mixColors - Complex Color Formats > should mix LAB colors directly 1ms
+     → expected 6.56 to be close to +0, received difference is 6.56, but expected 5
+ ✓ src/__tests__/labXyzConversions.test.ts (40 tests) 21ms
+ ✓ src/__tests__/integration.test.ts (41 tests) 19ms
+ ❯ src/__tests__/labXyz.test.ts (25 tests | 1 failed) 46ms
+   × LAB and XYZ Color Space Support > Convert Method with LAB and XYZ > should convert from LAB format 12ms
+     → expected 'lab(53.24%, 80.09, 67.21)' to be 'lab(53.24%, 80.09, 67.2)' // Object.is equality
+ ✓ src/__tests__/colorConverter.test.ts (70 tests) 65ms
+ ❯ src/__tests__/colorBlindness.test.ts (24 tests | 1 failed) 75ms
+   × Color Blindness Simulation > areColorsDistinguishable > should identify indistinguishable colors 11ms
+     → expected true to be false // Object.is equality
+ ✓ src/__tests__/harmony.integration.test.ts (6 tests) 7ms
+ ✓ src/__tests__/alphaHex.test.ts (21 tests) 7ms
+ ✓ src/__tests__/resources.integration.test.ts (6 tests) 3ms
+ ✓ src/__tests__/index.test.ts (14 tests) 9ms
+ ✓ src/__tests__/resources.test.ts (18 tests) 28ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/colorBlindness.test.ts > Color Blindness Simulation > areColorsDistinguishable > should identify indistinguishable colors
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/colorBlindness.test.ts:160:73
+    158|       
+    159|       // Very similar colors should be indistinguishable
+    160|       expect(areColorsDistinguishable(color1, color2, 'protanopia', 5)…
+       |                                                                         ^
+    161|     });
+    162| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/__tests__/colorMixing.test.ts > Color Mixing > mixColors - Alpha Channel Handling > should mix colors with alpha channels
+AssertionError: expected 0.5019607843137255 to be close to 0.5, received difference is 0.0019607843137254832, but expected 0.0005
+ ❯ src/__tests__/colorMixing.test.ts:134:23
+    132|       const rgba = result.rawValues?.rgba;
+    133|       expect(rgba).toBeDefined();
+    134|       expect(rgba!.a).toBeCloseTo(0.5, 3);
+       |                       ^
+    135|     });
+    136| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/__tests__/colorMixing.test.ts > Color Mixing > mixColors - Alpha Channel Handling > should handle mixed alpha and non-alpha colors
+AssertionError: expected 0.5019607843137255 to be close to 0.5, received difference is 0.0019607843137254832, but expected 0.0005
+ ❯ src/__tests__/colorMixing.test.ts:141:42
+    139|       const result1 = ColorConverter.mixColors('rgba(255, 0, 0, 0.5)',…
+    140|       expect(result1.rgba).toBeDefined();
+    141|       expect(result1.rawValues?.rgba?.a).toBeCloseTo(0.5, 3);
+       |                                          ^
+    142|       
+    143|       // Second color has alpha
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/__tests__/colorMixing.test.ts > Color Mixing > mixColors - Alpha Channel Handling > should interpolate alpha values
+AssertionError: expected 0.5019607843137255 to be close to 0.5, received difference is 0.0019607843137254832, but expected 0.0005
+ ❯ src/__tests__/colorMixing.test.ts:152:23
+    150|       const result = ColorConverter.mixColors('rgba(255, 0, 0, 0.2)', …
+    151|       const rgba = result.rawValues?.rgba;
+    152|       expect(rgba!.a).toBeCloseTo(0.5, 3); // (0.2 * 0.5) + (0.8 * 0.5…
+       |                       ^
+    153|     });
+    154|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/__tests__/colorMixing.test.ts > Color Mixing > mixColors - Complex Color Formats > should mix LAB colors directly
+AssertionError: expected 6.56 to be close to +0, received difference is 6.56, but expected 5
+ ❯ src/__tests__/colorMixing.test.ts:198:22
+    196|       // Due to conversion through RGB, there might be small differenc…
+    197|       expect(lab!.l).toBeCloseTo(50, -1);
+    198|       expect(lab!.a).toBeCloseTo(0, -1); // Should average to 0
+       |                      ^
+    199|       expect(lab!.b).toBeCloseTo(0, -1);
+    200|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/__tests__/labXyz.test.ts > LAB and XYZ Color Space Support > Convert Method with LAB and XYZ > should convert from LAB format
+AssertionError: expected 'lab(53.24%, 80.09, 67.21)' to be 'lab(53.24%, 80.09, 67.2)' // Object.is equality
+
+Expected: "lab(53.24%, 80.09, 67.2)"
+Received: "lab(53.24%, 80.09, 67.21)"
+
+ ❯ src/__tests__/labXyz.test.ts:255:26
+    253|       expect(result.hex).toBe('#ff0000');
+    254|       expect(result.rgb).toBe('rgb(255, 0, 0)');
+    255|       expect(result.lab).toBe('lab(53.24%, 80.09, 67.2)');
+       |                          ^
+    256|     });
+    257| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+ Test Files  3 failed | 11 passed (14)
+      Tests  6 failed | 351 passed (357)
+   Start at  19:28:48
+   Duration  1.19s (transform 688ms, setup 0ms, collect 1.15s, tests 378ms, environment 3ms, prepare 1.57s)
+

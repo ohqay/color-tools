@@ -10,18 +10,35 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { ColorConverter } from './colorConverter.js';
 import { ColorFormat } from './types.js';
+import { ColorHarmony, HarmonyType, HarmonyOptions } from './colorHarmony.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { getAllPalettes, getPalette } from './resources/palettes.js';
 import { webSafeColorsResource } from './resources/webSafeColors.js';
 import { namedColorsResource } from './resources/namedColorsCategories.js';
+import { checkContrast, findAccessibleColor, suggestAccessiblePairs } from './colorAccessibility.js';
+import { simulateColorBlindness, simulateAllColorBlindness, ColorBlindnessType, colorBlindnessInfo } from './colorBlindness.js';
 
 // Get package version dynamically
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
 const VERSION = packageJson.version;
+
+// Helper function to get harmony description
+function getHarmonyDescription(harmonyType: HarmonyType): string {
+  const descriptions: Record<HarmonyType, string> = {
+    'complementary': 'Two colors opposite each other on the color wheel, creating high contrast',
+    'analogous': 'Colors adjacent to each other on the color wheel, creating harmonious and serene combinations',
+    'triadic': 'Three colors evenly spaced around the color wheel (120° apart), offering vibrant yet balanced schemes',
+    'tetradic': 'Four colors evenly spaced around the color wheel (90° apart), also known as square color scheme',
+    'square': 'Four colors evenly spaced around the color wheel (90° apart), also known as tetradic',
+    'split-complementary': 'Base color plus two colors adjacent to its complement, offering contrast with more nuance',
+    'double-complementary': 'Two complementary color pairs forming a rectangle on the color wheel, providing rich color schemes',
+  };
+  return descriptions[harmonyType] || '';
+}
 
 // Create server instance
 const server = new Server(
@@ -74,6 +91,121 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: 'object',
           properties: {},
+        },
+      },
+      {
+        name: 'generate-harmony',
+        description: 'Generate harmonious color schemes based on color theory principles',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            baseColor: {
+              type: 'string',
+              description: 'The base color to generate harmonies from (any supported format)',
+            },
+            harmonyType: {
+              type: 'string',
+              enum: ['complementary', 'analogous', 'triadic', 'tetradic', 'square', 'split-complementary', 'double-complementary'],
+              description: 'Type of color harmony to generate',
+            },
+            outputFormat: {
+              type: 'string',
+              enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk'],
+              description: 'Output format for the generated colors (default: hex)',
+            },
+            options: {
+              type: 'object',
+              properties: {
+                angleAdjustment: {
+                  type: 'number',
+                  description: 'Custom angle adjustment for fine-tuning harmony colors',
+                },
+                analogousCount: {
+                  type: 'number',
+                  description: 'Number of colors to generate for analogous harmony (default: 3)',
+                },
+                analogousAngle: {
+                  type: 'number',
+                  description: 'Angle between analogous colors (default: 30)',
+                },
+              },
+              description: 'Additional options for harmony generation',
+            },
+          },
+          required: ['baseColor', 'harmonyType'],
+        },
+      },
+      {
+        name: 'check-contrast',
+        description: 'Calculate WCAG contrast ratio between two colors and check accessibility compliance',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            foreground: {
+              type: 'string',
+              description: 'The foreground/text color (any supported format)',
+            },
+            background: {
+              type: 'string',
+              description: 'The background color (any supported format)',
+            },
+          },
+          required: ['foreground', 'background'],
+        },
+      },
+      {
+        name: 'simulate-colorblind',
+        description: 'Simulate how a color appears to people with different types of color blindness',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            color: {
+              type: 'string',
+              description: 'The color to simulate (any supported format)',
+            },
+            type: {
+              type: 'string',
+              enum: ['protanopia', 'protanomaly', 'deuteranopia', 'deuteranomaly', 'tritanopia', 'tritanomaly', 'achromatopsia', 'achromatomaly'],
+              description: 'Type of color blindness to simulate. If not specified, simulates all types.',
+            },
+          },
+          required: ['color'],
+        },
+      },
+      {
+        name: 'find-accessible-color',
+        description: 'Find an accessible alternative to a given color that meets WCAG contrast requirements',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            targetColor: {
+              type: 'string',
+              description: 'The color to find an alternative for (any supported format)',
+            },
+            backgroundColor: {
+              type: 'string',
+              description: 'The background color to ensure contrast against (any supported format)',
+            },
+            options: {
+              type: 'object',
+              properties: {
+                targetContrast: {
+                  type: 'number',
+                  description: 'Target contrast ratio (default: 4.5 for WCAG AA)',
+                },
+                maintainHue: {
+                  type: 'boolean',
+                  description: 'Try to maintain the original hue (default: true)',
+                },
+                preferDarker: {
+                  type: 'boolean',
+                  description: 'Prefer darker alternatives (default: auto-determined based on background)',
+                },
+              },
+              description: 'Additional options for finding accessible alternatives',
+            },
+          },
+          required: ['targetColor', 'backgroundColor'],
         },
       },
     ],
@@ -150,6 +282,83 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   }
 
+  if (request.params.name === 'generate-harmony') {
+    try {
+      const { baseColor, harmonyType, outputFormat, options } = request.params.arguments as {
+        baseColor: string;
+        harmonyType: HarmonyType;
+        outputFormat?: ColorFormat;
+        options?: HarmonyOptions;
+      };
+
+      // Validate input
+      if (!baseColor || typeof baseColor !== 'string') {
+        throw new Error('Base color is required');
+      }
+
+      if (!harmonyType) {
+        throw new Error('Harmony type is required');
+      }
+
+      // Generate harmony
+      const result = ColorHarmony.generateHarmony(
+        baseColor,
+        harmonyType,
+        outputFormat || 'hex',
+        options || {}
+      );
+
+      // Format response
+      const response: any = {
+        success: true,
+        input: baseColor,
+        harmonyType: harmonyType,
+        outputFormat: outputFormat || 'hex',
+        result: {
+          baseColor: result.baseColor,
+          colors: result.colors,
+          colorCount: result.colors.length,
+          description: getHarmonyDescription(harmonyType),
+        },
+      };
+
+      // Add raw HSL values if available
+      if (result.rawValues) {
+        response.result.rawHSLValues = result.rawValues.map(hsl => ({
+          h: hsl.h,
+          s: hsl.s,
+          l: hsl.l,
+        }));
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+                hint: 'Please provide a valid base color and harmony type. Supported harmony types: complementary, analogous, triadic, tetradic, split-complementary, double-complementary',
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  }
+
   if (request.params.name === 'color-info') {
     const info = {
       name: 'Color Converter MCP Server',
@@ -199,8 +408,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         'Support for common color format variations',
         'Support for CSS named colors (140+ colors)',
         'Alpha/transparency support (RGBA, HSLA)',
-        'Detailed validation with helpful error messages'
+        'Detailed validation with helpful error messages',
+        'Color harmony generation (complementary, analogous, triadic, etc.)',
+        'Custom angle adjustments for fine-tuning harmonies'
       ],
+      colorHarmonies: {
+        complementary: 'Two colors opposite on the color wheel',
+        analogous: 'Adjacent colors on the color wheel',
+        triadic: 'Three colors evenly spaced (120° apart)',
+        tetradic: 'Four colors evenly spaced (90° apart)',
+        'split-complementary': 'Base color + two adjacent to complement',
+        'double-complementary': 'Two complementary pairs'
+      },
       usage: {
         example1: {
           description: 'Convert hex to all formats',
@@ -211,6 +430,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           description: 'Convert RGB to specific formats',
           input: { input: 'rgb(255, 0, 0)', to: ['hex', 'hsl'] },
           output: 'Returns only hex and hsl values'
+        },
+        example3: {
+          description: 'Generate complementary harmony',
+          input: { baseColor: '#FF6B6B', harmonyType: 'complementary' },
+          output: 'Returns base color and its complement'
+        },
+        example4: {
+          description: 'Generate triadic harmony with RGB output',
+          input: { baseColor: '#4ECDC4', harmonyType: 'triadic', outputFormat: 'rgb' },
+          output: 'Returns three evenly spaced colors in RGB format'
         }
       }
     };
@@ -223,6 +452,264 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         },
       ],
     };
+  }
+
+  if (request.params.name === 'check-contrast') {
+    try {
+      const { foreground, background } = request.params.arguments as {
+        foreground: string;
+        background: string;
+      };
+
+      // Validate inputs
+      if (!foreground || typeof foreground !== 'string') {
+        throw new Error('Foreground color is required');
+      }
+      if (!background || typeof background !== 'string') {
+        throw new Error('Background color is required');
+      }
+
+      // Check contrast
+      const result = checkContrast(foreground, background);
+
+      // Format response
+      const response = {
+        success: true,
+        foreground,
+        background,
+        contrastRatio: result.ratio,
+        wcagCompliance: {
+          AA: {
+            normalText: result.passes.aa.normal,
+            largeText: result.passes.aa.large,
+          },
+          AAA: {
+            normalText: result.passes.aaa.normal,
+            largeText: result.passes.aaa.large,
+          },
+        },
+        recommendation: result.recommendation,
+        guidelines: {
+          AA: {
+            normalText: '4.5:1 minimum',
+            largeText: '3:1 minimum (18pt or 14pt bold)',
+          },
+          AAA: {
+            normalText: '7:1 minimum',
+            largeText: '4.5:1 minimum',
+          },
+        },
+      };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+                hint: 'Please provide valid foreground and background colors in any supported format',
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  }
+
+  if (request.params.name === 'simulate-colorblind') {
+    try {
+      const { color, type } = request.params.arguments as {
+        color: string;
+        type?: ColorBlindnessType;
+      };
+
+      // Validate input
+      if (!color || typeof color !== 'string') {
+        throw new Error('Color is required');
+      }
+
+      // Perform simulation
+      if (type) {
+        // Simulate specific type
+        const simulated = simulateColorBlindness(color, type);
+        const info = colorBlindnessInfo[type];
+
+        const response = {
+          success: true,
+          originalColor: color,
+          type,
+          simulatedColor: {
+            rgb: `rgb(${simulated.r}, ${simulated.g}, ${simulated.b})`,
+            hex: ColorConverter.rgbToHex(simulated),
+            raw: simulated,
+          },
+          info: {
+            name: info.name,
+            description: info.description,
+            prevalence: info.prevalence,
+            severity: info.severity,
+          },
+        };
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response, null, 2),
+            },
+          ],
+        };
+      } else {
+        // Simulate all types
+        const allSimulations = simulateAllColorBlindness(color);
+        
+        const response = {
+          success: true,
+          originalColor: color,
+          simulations: Object.entries(allSimulations).map(([type, data]) => ({
+            type,
+            name: data.info.name,
+            simulatedColor: {
+              rgb: `rgb(${data.simulated.r}, ${data.simulated.g}, ${data.simulated.b})`,
+              hex: data.hex,
+            },
+            info: {
+              description: data.info.description,
+              prevalence: data.info.prevalence,
+              severity: data.info.severity,
+            },
+          })),
+        };
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response, null, 2),
+            },
+          ],
+        };
+      }
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+                hint: 'Please provide a valid color in any supported format',
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  }
+
+  if (request.params.name === 'find-accessible-color') {
+    try {
+      const { targetColor, backgroundColor, options } = request.params.arguments as {
+        targetColor: string;
+        backgroundColor: string;
+        options?: {
+          targetContrast?: number;
+          maintainHue?: boolean;
+          preferDarker?: boolean;
+        };
+      };
+
+      // Validate inputs
+      if (!targetColor || typeof targetColor !== 'string') {
+        throw new Error('Target color is required');
+      }
+      if (!backgroundColor || typeof backgroundColor !== 'string') {
+        throw new Error('Background color is required');
+      }
+
+      // Find accessible alternative
+      const result = findAccessibleColor(targetColor, backgroundColor, options);
+
+      if (!result) {
+        throw new Error('Could not find an accessible color alternative');
+      }
+
+      // Also provide some alternative suggestions
+      const suggestions = suggestAccessiblePairs(targetColor, 3);
+
+      const response = {
+        success: true,
+        originalColor: targetColor,
+        backgroundColor,
+        accessibleAlternative: {
+          color: `rgb(${result.color.r}, ${result.color.g}, ${result.color.b})`,
+          hex: result.hex,
+          contrastRatio: Math.round(result.contrast * 100) / 100,
+        },
+        options: {
+          targetContrast: options?.targetContrast || 4.5,
+          maintainHue: options?.maintainHue !== false,
+          preferDarker: options?.preferDarker,
+        },
+        additionalSuggestions: suggestions.map(s => ({
+          foreground: s.foreground.hex,
+          background: s.background.hex,
+          contrastRatio: s.contrast,
+          passes: {
+            AA: {
+              normalText: s.passes.aa.normal,
+              largeText: s.passes.aa.large,
+            },
+            AAA: {
+              normalText: s.passes.aaa.normal,
+              largeText: s.passes.aaa.large,
+            },
+          },
+        })),
+      };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+                hint: 'Please provide valid target and background colors in any supported format',
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
   }
 
   throw new Error(`Unknown tool: ${request.params.name}`);

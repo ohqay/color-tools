@@ -16,6 +16,14 @@ A Model Context Protocol (MCP) server that provides color conversion capabilitie
 - Support for CSS named colors (140+ colors like `red`, `blue`, `coral`)
 - Auto-detect input color format
 - Support for multiple output formats in a single conversion
+- Color harmony generation based on color theory:
+  - Complementary (opposite colors)
+  - Analogous (adjacent colors)
+  - Triadic (three evenly spaced)
+  - Tetradic/Square (four evenly spaced)
+  - Split-complementary (base + two adjacent to complement)
+  - Double-complementary (two complementary pairs)
+- Custom angle adjustments for fine-tuning harmonies
 - Comprehensive error handling with detailed validation messages
 - Includes `color-info` tool for server information and examples
 - MCP Resources for accessing color palettes and data:
@@ -102,6 +110,19 @@ Convert rgba(255, 0, 0, 0.5) to hsla
 Get information about the color converter
 ```
 
+#### generate-harmony
+```
+Generate a complementary color scheme for #FF6B6B
+```
+
+```
+Create a triadic harmony from blue in RGB format
+```
+
+```
+Generate analogous colors from #4ECDC4 with 5 colors
+```
+
 ## Tool Parameters
 
 ### convert-colour
@@ -111,6 +132,15 @@ Get information about the color converter
 
 ### color-info
 No parameters required - returns server information and examples
+
+### generate-harmony
+- `baseColor` (required): The base color to generate harmonies from (any supported format)
+- `harmonyType` (required): Type of harmony - `complementary`, `analogous`, `triadic`, `tetradic`, `square`, `split-complementary`, or `double-complementary`
+- `outputFormat` (optional): Format for output colors - defaults to `hex`
+- `options` (optional): Additional options:
+  - `angleAdjustment`: Custom angle adjustment in degrees
+  - `analogousCount`: Number of colors for analogous harmony (default: 3)
+  - `analogousAngle`: Angle between analogous colors (default: 30)
 
 ## MCP Resources
 
@@ -211,6 +241,81 @@ All resources return JSON data with `application/json` mime type. Example struct
 }
 ```
 
+## Color Harmonies
+
+The `generate-harmony` tool creates aesthetically pleasing color combinations based on color theory principles:
+
+### Harmony Types
+
+1. **Complementary**: Two colors opposite on the color wheel (180° apart)
+   - High contrast, vibrant combinations
+   - Example: Red (#FF0000) → Cyan (#00FFFF)
+
+2. **Analogous**: Adjacent colors on the color wheel
+   - Harmonious, serene combinations
+   - Default: 3 colors with 30° spacing
+   - Customizable count and angle
+
+3. **Triadic**: Three colors evenly spaced (120° apart)
+   - Vibrant yet balanced schemes
+   - Forms an equilateral triangle on the color wheel
+
+4. **Tetradic/Square**: Four colors evenly spaced (90° apart)
+   - Rich, diverse color schemes
+   - Forms a square on the color wheel
+
+5. **Split-Complementary**: Base color + two adjacent to its complement
+   - High contrast with more nuance than pure complementary
+   - Default: ±30° from the complement
+
+6. **Double-Complementary**: Two complementary pairs
+   - Complex, rich color schemes
+   - Forms a rectangle on the color wheel
+
+### Example Harmony Requests
+
+```json
+{
+  "baseColor": "#FF6B6B",
+  "harmonyType": "complementary",
+  "outputFormat": "hex"
+}
+```
+
+```json
+{
+  "baseColor": "blue",
+  "harmonyType": "analogous",
+  "outputFormat": "rgb",
+  "options": {
+    "analogousCount": 5,
+    "analogousAngle": 15
+  }
+}
+```
+
+### Example Harmony Response
+
+```json
+{
+  "success": true,
+  "input": "#FF6B6B",
+  "harmonyType": "triadic",
+  "outputFormat": "hex",
+  "result": {
+    "baseColor": "#ff6b6b",
+    "colors": ["#ff6b6b", "#6bff6b", "#6b6bff"],
+    "colorCount": 3,
+    "description": "Three colors evenly spaced around the color wheel (120° apart), offering vibrant yet balanced schemes",
+    "rawHSLValues": [
+      { "h": 0, "s": 58, "l": 71 },
+      { "h": 120, "s": 58, "l": 71 },
+      { "h": 240, "s": 58, "l": 71 }
+    ]
+  }
+}
+```
+
 ## Supported Color Formats
 
 ### Input Formats
@@ -278,12 +383,18 @@ color-converter-mcp/
 ├── src/
 │   ├── index.ts           # MCP server implementation
 │   ├── colorConverter.ts  # Color conversion algorithms
+│   ├── colorHarmony.ts    # Color harmony generation
 │   ├── types.ts          # TypeScript type definitions
 │   ├── namedColors.ts    # CSS named color definitions
+│   ├── __tests__/        # Test files
+│   │   ├── colorHarmony.test.ts   # Harmony generation tests
+│   │   └── ...           # Other test files
 │   └── resources/        # MCP resource data
 │       ├── palettes.ts            # Material Design & Tailwind palettes
 │       ├── webSafeColors.ts       # Web-safe color definitions
 │       └── namedColorsCategories.ts # Categorized named colors
+├── examples/
+│   └── color-harmony-example.ts   # Harmony usage examples
 ├── package.json
 ├── tsconfig.json
 └── README.md
