@@ -1,4 +1,4 @@
-import { ColorConverter } from '../dist/colorConverter.js';
+import { ColorConverter } from '../src/colorConverter.js';
 
 console.log('LAB and XYZ Color Space Examples\n');
 

@@ -51,7 +51,7 @@ let webSafeColorsResource: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let namedColorsResource: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let tailwindV4Palette: any, getTailwindV4Color: any, findTailwindV4ColorByHex: any, searchTailwindV4Colors: any;
+let tailwindV4Palette: any, getTailwindV4Color: any, findTailwindV4ColorByHex: any, searchTailwindV4Colors: any, findTailwindV4ColorByHexWithSimilar: any;
 
 // Pre-computed constants for performance
 const VERSION = '1.0.0'; // Static version to avoid file system read
@@ -162,8 +162,9 @@ const loadTailwindV4Functions = async () => {
     getTailwindV4Color = module.getTailwindV4Color;
     findTailwindV4ColorByHex = module.findTailwindV4ColorByHex;
     searchTailwindV4Colors = module.searchTailwindV4Colors;
+    findTailwindV4ColorByHexWithSimilar = module.findTailwindV4ColorByHexWithSimilar;
   }
-  return { tailwindV4Palette, getTailwindV4Color, findTailwindV4ColorByHex, searchTailwindV4Colors };
+  return { tailwindV4Palette, getTailwindV4Color, findTailwindV4ColorByHex, searchTailwindV4Colors, findTailwindV4ColorByHexWithSimilar };
 };
 
 // Create server instance
@@ -380,8 +381,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             operation: {
               type: 'string',
-              enum: ['to-hex', 'from-hex', 'search', 'get-color', 'get-all-shades'],
-              description: 'Operation to perform: to-hex (convert Tailwind name to hex), from-hex (find Tailwind name by hex), search (search colors), get-color (get specific color), get-all-shades (get all shades of a color)',
+              enum: ['to-hex', 'from-hex', 'search', 'get-color', 'get-all-shades', 'find-similar'],
+              description: 'Operation to perform: to-hex (convert Tailwind name to hex), from-hex (find exact Tailwind name by hex), search (search colors), get-color (get specific color), get-all-shades (get all shades of a color), find-similar (find closest matching colors for any hex value)',
             },
             outputFormat: {
               type: 'string',
@@ -657,14 +658,14 @@ const handleMixColors = async (args: unknown) => {
 const handleConvertTailwindColor = async (args: unknown) => {
   const { input, operation, outputFormat } = args as {
     input: string;
-    operation: 'to-hex' | 'from-hex' | 'search' | 'get-color' | 'get-all-shades';
+    operation: 'to-hex' | 'from-hex' | 'search' | 'get-color' | 'get-all-shades' | 'find-similar';
     outputFormat?: ColorFormat;
   };
   
   validateColorInput(input, 'Input');
   if (!operation) {throw new Error('Operation is required');}
   
-  const { getTailwindV4Color: getColorFn, findTailwindV4ColorByHex: findByHexFn, searchTailwindV4Colors: searchFn } = await loadTailwindV4Functions();
+  const { getTailwindV4Color: getColorFn, findTailwindV4ColorByHex: findByHexFn, searchTailwindV4Colors: searchFn, findTailwindV4ColorByHexWithSimilar: findSimilarFn } = await loadTailwindV4Functions();
   
   const response: TailwindResponseBase = {
     success: true,
@@ -727,10 +728,11 @@ const handleConvertTailwindColor = async (args: unknown) => {
     }
     
     case 'from-hex': {
-      // Find Tailwind color by hex value
+      // Find exact Tailwind color by hex value
       const result = findByHexFn(input);
       if (!result) {
-        throw new Error(`No Tailwind color found for hex value: ${input}`);
+        // If no exact match, provide helpful message with suggestion to use find-similar
+        throw new Error(`No exact Tailwind color match found for hex value: ${input}. Use 'find-similar' operation to find closest matches.`);
       }
       
       response.result = {
@@ -738,7 +740,39 @@ const handleConvertTailwindColor = async (args: unknown) => {
         tailwindName: `${result.color}-${result.shade}`,
         colorName: result.color,
         shade: result.shade,
+        exactMatch: true,
       };
+      break;
+    }
+    
+    case 'find-similar': {
+      // Find closest matching Tailwind colors for any hex value
+      const searchResult = findSimilarFn(input, 5); // Get top 5 matches
+      
+      if (searchResult.exactMatch && searchResult.result) {
+        response.result = {
+          hexValue: input,
+          exactMatch: true,
+          tailwindName: `${searchResult.result.color}-${searchResult.result.shade}`,
+          colorName: searchResult.result.color,
+          shade: searchResult.result.shade,
+        };
+      } else {
+        response.result = {
+          hexValue: input,
+          exactMatch: false,
+          closestMatches: searchResult.closestMatches?.map((match: { color: string; shade: string; value: string; distance: number }) => ({
+            tailwindName: `${match.color}-${match.shade}`,
+            colorName: match.color,
+            shade: match.shade,
+            value: match.value,
+            distance: Math.round(match.distance * 100) / 100, // Round to 2 decimal places
+            ...(outputFormat && outputFormat !== 'hex' ? {
+              convertedValue: ColorConverter.convert(match.value, 'hex', [outputFormat])[outputFormat]
+            } : {})
+          })),
+        };
+      }
       break;
     }
     
@@ -806,7 +840,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       'simulate-colorblind': 'Please provide a valid color in any supported format',
       'find-accessible-color': 'Please provide valid target and background colors in any supported format',
       'mix-colors': 'Please provide two valid colors in any supported format',
-      'convert-tailwind-color': 'Please provide a valid input for the specified operation. For to-hex/get-color: use "blue-500" or "blue". For from-hex: use "#3b82f6". For search: use color name like "blue". For get-all-shades: use color name like "blue".',
+      'convert-tailwind-color': 'Please provide a valid input for the specified operation. For to-hex/get-color: use "blue-500" or "blue". For from-hex: use "#3b82f6" (exact matches only). For find-similar: use any hex color like "#D97757". For search: use color name like "blue". For get-all-shades: use color name like "blue".',
     };
     
     return createErrorResponse(error, errorHints[name] ?? 'Please check your input parameters');

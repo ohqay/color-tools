@@ -402,6 +402,43 @@ export function getTailwindV4ColorShade(colorName: string, shade: string): Tailw
   return color.shades.find(s => s.name === shade);
 }
 
+export interface TailwindColorMatch {
+  color: string;
+  shade: string;
+  value: string;
+  distance: number;
+  exactMatch: boolean;
+}
+
+export interface TailwindColorSearchResult {
+  exactMatch: boolean;
+  result?: { color: string; shade: string };
+  closestMatches?: TailwindColorMatch[];
+}
+
+// Helper function to convert hex to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const normalizedHex = hex.replace('#', '');
+  const r = parseInt(normalizedHex.substr(0, 2), 16);
+  const g = parseInt(normalizedHex.substr(2, 2), 16);
+  const b = parseInt(normalizedHex.substr(4, 2), 16);
+  return { r, g, b };
+}
+
+// Calculate color distance using Delta E (simplified version)
+function calculateColorDistance(hex1: string, hex2: string): number {
+  const rgb1 = hexToRgb(hex1);
+  const rgb2 = hexToRgb(hex2);
+  
+  // Simple Euclidean distance in RGB space
+  // For better accuracy, we could convert to LAB space, but this is sufficient for basic matching
+  const deltaR = rgb1.r - rgb2.r;
+  const deltaG = rgb1.g - rgb2.g;
+  const deltaB = rgb1.b - rgb2.b;
+  
+  return Math.sqrt(deltaR * deltaR + deltaG * deltaG + deltaB * deltaB);
+}
+
 export function findTailwindV4ColorByHex(hexValue: string): { color: string; shade: string } | undefined {
   const normalizedHex = hexValue.toLowerCase().replace('#', '');
   
@@ -414,6 +451,43 @@ export function findTailwindV4ColorByHex(hexValue: string): { color: string; sha
     }
   }
   return undefined;
+}
+
+export function findTailwindV4ColorByHexWithSimilar(hexValue: string, maxResults = 3): TailwindColorSearchResult {
+  const normalizedHex = hexValue.toLowerCase();
+  const exactMatch = findTailwindV4ColorByHex(hexValue);
+  
+  if (exactMatch) {
+    return {
+      exactMatch: true,
+      result: exactMatch
+    };
+  }
+  
+  // Find closest matches
+  const matches: TailwindColorMatch[] = [];
+  
+  for (const color of tailwindV4Palette.colors) {
+    for (const shade of color.shades) {
+      const distance = calculateColorDistance(normalizedHex, shade.value);
+      matches.push({
+        color: color.name,
+        shade: shade.name,
+        value: shade.value,
+        distance,
+        exactMatch: false
+      });
+    }
+  }
+  
+  // Sort by distance and take top results
+  matches.sort((a, b) => a.distance - b.distance);
+  const closestMatches = matches.slice(0, maxResults);
+  
+  return {
+    exactMatch: false,
+    closestMatches
+  };
 }
 
 export function searchTailwindV4Colors(query: string): { color: string; shade: string; value: string }[] {
