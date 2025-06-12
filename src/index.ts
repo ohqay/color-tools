@@ -9,18 +9,48 @@ import {
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { ColorConverter } from './colorConverter.js';
-import { ColorFormat } from './types.js';
-import { HarmonyType, HarmonyOptions } from './colorHarmony.js';
-import { ColorBlindnessType } from './colorBlindness.js';
+import type { ColorFormat } from './types.js';
+import type { HarmonyType, HarmonyOptions } from './colorHarmony.js';
+import type { ColorBlindnessType } from './colorBlindness.js';
 import { performanceMonitor, measureTime } from './core/monitoring/PerformanceMonitor.js';
 
+// Type definitions for better type safety
+interface ColorBlindnessSimulationData {
+  info: {
+    name: string;
+    description: string;
+    prevalence: string;
+    severity: string;
+  };
+  simulated: {
+    r: number;
+    g: number;
+    b: number;
+  };
+  hex: string;
+}
+
+interface TailwindResponseBase {
+  success: boolean;
+  input: string;
+  operation: string;
+  result?: Record<string, unknown>;
+}
+
 // Lazy imports - only load when needed
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let ColorHarmony: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let checkContrast: any, findAccessibleColor: any, suggestAccessiblePairs: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let simulateColorBlindness: any, simulateAllColorBlindness: any, colorBlindnessInfo: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let getAllPalettes: any, getPalette: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let webSafeColorsResource: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let namedColorsResource: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let tailwindV4Palette: any, getTailwindV4Color: any, findTailwindV4ColorByHex: any, searchTailwindV4Colors: any;
 
 // Pre-computed constants for performance
@@ -46,9 +76,9 @@ const blendModeDescriptions: Record<string, string> = {
 };
 
 // Optimized helper functions
-const getHarmonyDescription = (harmonyType: HarmonyType): string => harmonyDescriptions[harmonyType] || '';
+const getHarmonyDescription = (harmonyType: HarmonyType): string => harmonyDescriptions[harmonyType] ?? '';
 
-const formatJSON = (obj: any): string => JSON.stringify(obj, null, JSON_INDENT);
+const formatJSON = (obj: unknown): string => JSON.stringify(obj, null, JSON_INDENT);
 
 const createErrorResponse = (error: unknown, hint: string) => ({
   content: [{
@@ -61,7 +91,7 @@ const createErrorResponse = (error: unknown, hint: string) => ({
   }],
 });
 
-const createSuccessResponse = (data: any) => ({
+const createSuccessResponse = (data: unknown) => ({
   content: [{
     type: 'text' as const,
     text: formatJSON(data),
@@ -367,7 +397,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 // Optimized tool handlers
-const handleConvertcolor = async (args: any) => {
+const handleConvertcolor = async (args: unknown) => {
   const { input, from, to } = args as { input: string; from?: ColorFormat; to?: ColorFormat[] };
   
   validateColorInput(input, 'Input color value');
@@ -383,12 +413,12 @@ const handleConvertcolor = async (args: any) => {
     cacheHit: false // Basic assumption, could be enhanced with actual cache hit detection
   });
   
-  const response: Record<string, any> = { success: true, input };
+  const response: Record<string, unknown> = { success: true, input };
   
   // Add detected format if not specified
   if (!from) {
     const detectedFormat = ColorConverter.detectFormat(input);
-    if (detectedFormat) response.detectedFormat = detectedFormat;
+    if (detectedFormat) {response.detectedFormat = detectedFormat;}
   }
   
   // Efficiently copy results without multiple property checks
@@ -397,7 +427,7 @@ const handleConvertcolor = async (args: any) => {
   return createSuccessResponse(response);
 };
 
-const handleGenerateHarmony = async (args: any) => {
+const handleGenerateHarmony = async (args: unknown) => {
   const { baseColor, harmonyType, outputFormat, options } = args as {
     baseColor: string;
     harmonyType: HarmonyType;
@@ -406,28 +436,28 @@ const handleGenerateHarmony = async (args: any) => {
   };
   
   validateColorInput(baseColor, 'Base color');
-  if (!harmonyType) throw new Error('Harmony type is required');
+  if (!harmonyType) {throw new Error('Harmony type is required');}
   
   const ColorHarmonyClass = await loadColorHarmony();
   const result = ColorHarmonyClass.generateHarmony(
     baseColor,
     harmonyType,
-    outputFormat || 'hex',
-    options || {}
+    outputFormat ?? 'hex',
+    options ?? {}
   );
   
   const response = {
     success: true,
     input: baseColor,
     harmonyType,
-    outputFormat: outputFormat || 'hex',
+    outputFormat: outputFormat ?? 'hex',
     result: {
       baseColor: result.baseColor,
       colors: result.colors,
       colorCount: result.colors.length,
       description: getHarmonyDescription(harmonyType),
       ...(result.rawValues && {
-        rawHSLValues: result.rawValues.map((hsl: any) => ({
+        rawHSLValues: result.rawValues.map((hsl: { h: number; s: number; l: number }) => ({
           h: hsl.h,
           s: hsl.s,
           l: hsl.l,
@@ -439,7 +469,7 @@ const handleGenerateHarmony = async (args: any) => {
   return createSuccessResponse(response);
 };
 
-const handleCheckContrast = async (args: any) => {
+const handleCheckContrast = async (args: unknown) => {
   const { foreground, background } = args as { foreground: string; background: string };
   
   validateColorInput(foreground, 'Foreground color');
@@ -479,7 +509,7 @@ const handleCheckContrast = async (args: any) => {
   return createSuccessResponse(response);
 };
 
-const handleSimulateColorblind = async (args: any) => {
+const handleSimulateColorblind = async (args: unknown) => {
   const { color, type } = args as { color: string; type?: ColorBlindnessType };
   
   validateColorInput(color, 'Color');
@@ -514,7 +544,7 @@ const handleSimulateColorblind = async (args: any) => {
     const response = {
       success: true,
       originalColor: color,
-      simulations: Object.entries(allSimulations).map(([type, data]: [string, any]) => ({
+      simulations: (Object.entries(allSimulations) as [string, ColorBlindnessSimulationData][]).map(([type, data]) => ({
         type,
         name: data.info.name,
         simulatedColor: {
@@ -533,7 +563,7 @@ const handleSimulateColorblind = async (args: any) => {
   }
 };
 
-const handleFindAccessibleColor = async (args: any) => {
+const handleFindAccessibleColor = async (args: unknown) => {
   const { targetColor, backgroundColor, options } = args as {
     targetColor: string;
     backgroundColor: string;
@@ -566,11 +596,11 @@ const handleFindAccessibleColor = async (args: any) => {
       contrastRatio: Math.round(result.contrast * 100) / 100,
     },
     options: {
-      targetContrast: options?.targetContrast || 4.5,
+      targetContrast: options?.targetContrast ?? 4.5,
       maintainHue: options?.maintainHue !== false,
       preferDarker: options?.preferDarker,
     },
-    additionalSuggestions: suggestions.map((s: any) => ({
+    additionalSuggestions: suggestions.map((s: { foreground: { hex: string }; background: { hex: string }; contrast: number; passes: { aa: { normal: boolean; large: boolean }; aaa: { normal: boolean; large: boolean } } }) => ({
       foreground: s.foreground.hex,
       background: s.background.hex,
       contrastRatio: s.contrast,
@@ -590,7 +620,7 @@ const handleFindAccessibleColor = async (args: any) => {
   return createSuccessResponse(response);
 };
 
-const handleMixColors = async (args: any) => {
+const handleMixColors = async (args: unknown) => {
   const { color1, color2, ratio, mode, outputFormat } = args as {
     color1: string;
     color2: string;
@@ -609,7 +639,7 @@ const handleMixColors = async (args: any) => {
     mode ?? 'normal'
   );
   
-  const response: Record<string, any> = {
+  const response: Record<string, unknown> = {
     success: true,
     color1,
     color2,
@@ -624,7 +654,7 @@ const handleMixColors = async (args: any) => {
   return createSuccessResponse(response);
 };
 
-const handleConvertTailwindColor = async (args: any) => {
+const handleConvertTailwindColor = async (args: unknown) => {
   const { input, operation, outputFormat } = args as {
     input: string;
     operation: 'to-hex' | 'from-hex' | 'search' | 'get-color' | 'get-all-shades';
@@ -632,11 +662,11 @@ const handleConvertTailwindColor = async (args: any) => {
   };
   
   validateColorInput(input, 'Input');
-  if (!operation) throw new Error('Operation is required');
+  if (!operation) {throw new Error('Operation is required');}
   
   const { getTailwindV4Color: getColorFn, findTailwindV4ColorByHex: findByHexFn, searchTailwindV4Colors: searchFn } = await loadTailwindV4Functions();
   
-  let response: Record<string, any> = {
+  const response: TailwindResponseBase = {
     success: true,
     input,
     operation,
@@ -655,7 +685,7 @@ const handleConvertTailwindColor = async (args: any) => {
         throw new Error(`Tailwind color not found: ${colorName}`);
       }
       
-      const colorShade = color.shades.find((s: any) => s.name === shade);
+      const colorShade = color.shades.find((s: { name: string; value: string }) => s.name === shade);
       if (!colorShade) {
         throw new Error(`Shade ${shade} not found for color ${colorName}`);
       }
@@ -684,7 +714,7 @@ const handleConvertTailwindColor = async (args: any) => {
       
       response.result = {
         colorName,
-        shades: color.shades.map((shade: any) => ({
+        shades: color.shades.map((shade: { name: string; value: string }) => ({
           name: shade.name,
           tailwindName: `${colorName}-${shade.name}`,
           value: shade.value,
@@ -721,7 +751,7 @@ const handleConvertTailwindColor = async (args: any) => {
       
       response.result = {
         query: input,
-        matches: results.slice(0, 20).map((result: any) => ({ // Limit to 20 results
+        matches: results.slice(0, 20).map((result: { color: string; shade: string; value: string }) => ({ // Limit to 20 results
           tailwindName: `${result.color}-${result.shade}`,
           colorName: result.color,
           shade: result.shade,
@@ -943,7 +973,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
           {
             uri,
             mimeType: 'application/json',
-            text: resourceCache.get(uri)!,
+            text: resourceCache.get(uri) as string,
           },
         ],
       };
@@ -959,7 +989,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       
       const paletteInfo = {
         palettes: [
-          ...palettes.map((p: any) => ({
+          ...palettes.map((p: { name: string; description: string; version: string; colors: unknown[] }) => ({
             id: p.name.toLowerCase().replace(/\s+/g, '-'),
             name: p.name,
             description: p.description,
@@ -1035,7 +1065,7 @@ async function main() {
   // Remove console.error to avoid interfering with protocol
 }
 
-main().catch((error) => {
+main().catch((_error) => {
   // Only log critical errors that prevent server startup
   // These will be captured by the host application
   process.exit(1);
