@@ -126,7 +126,7 @@ const loadResourceData = async () => {
 // Create server instance
 const server = new Server(
   {
-    name: 'colour-tools',
+    name: 'color-tools',
     version: VERSION,
   },
   {
@@ -142,7 +142,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: 'convert-colour',
+        name: 'convert-color',
         description: `Convert colors between different formats (hex, RGB, HSL, HSB/HSV, CMYK, LAB, XYZ) - v${VERSION}`,
         inputSchema: {
           type: 'object',
@@ -330,7 +330,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 // Optimized tool handlers
-const handleConvertColour = async (args: any) => {
+const handleConvertcolor = async (args: any) => {
   const { input, from, to } = args as { input: string; from?: ColorFormat; to?: ColorFormat[] };
   
   validateColorInput(input, 'Input color value');
@@ -583,8 +583,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   
   try {
     switch (name) {
-      case 'convert-colour':
-        return await handleConvertColour(args);
+      case 'convert-color':
+        return await handleConvertcolor(args);
       case 'generate-harmony':
         return await handleGenerateHarmony(args);
       case 'check-contrast':
@@ -602,7 +602,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   } catch (error) {
     const errorHints: Record<string, string> = {
-      'convert-colour': 'Please provide a valid color in one of these formats: #RRGGBB, rgb(r,g,b), rgba(r,g,b,a), hsl(h,s%,l%), hsla(h,s%,l%,a), hsb(h,s%,b%), cmyk(c%,m%,y%,k%), or CSS color names (e.g., "red", "blue")',
+      'convert-color': 'Please provide a valid color in one of these formats: #RRGGBB, rgb(r,g,b), rgba(r,g,b,a), hsl(h,s%,l%), hsla(h,s%,l%,a), hsb(h,s%,b%), cmyk(c%,m%,y%,k%), or CSS color names (e.g., "red", "blue")',
       'generate-harmony': 'Please provide a valid base color and harmony type. Supported harmony types: complementary, analogous, triadic, tetradic, split-complementary, double-complementary',
       'check-contrast': 'Please provide valid foreground and background colors in any supported format',
       'simulate-colorblind': 'Please provide a valid color in any supported format',

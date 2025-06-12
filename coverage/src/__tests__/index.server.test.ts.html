@@ -1572,7 +1572,7 @@ describe('MCP Server Handler Functions', () =&gt; {
       
       expect(result.tools).toHaveLength(7);
       expect(result.tools.map((t: any) =&gt; t.name)).toEqual([
-        'convert-colour',
+        'convert-color',
         'color-info', 
         'generate-harmony',
         'check-contrast',
@@ -1585,7 +1585,7 @@ describe('MCP Server Handler Functions', () =&gt; {
     it('should include correct tool schemas', async () =&gt; {
       const result = await mockListToolsHandler();
       
-      const convertTool = result.tools.find((t: any) =&gt; t.name === 'convert-colour');
+      const convertTool = result.tools.find((t: any) =&gt; t.name === 'convert-color');
       expect(convertTool.description).toContain('v1.0.0');
       expect(convertTool.inputSchema.required).toEqual(['input']);
       expect(convertTool.inputSchema.properties.input.type).toBe('string');
@@ -1595,11 +1595,11 @@ describe('MCP Server Handler Functions', () =&gt; {
     });
   });
 &nbsp;
-  describe('CallTool Handler - convert-colour', () =&gt; {
+  describe('CallTool Handler - convert-color', () =&gt; {
     it('should convert color successfully', async () =&gt; {
       const request = {
         params: {
-          name: 'convert-colour',
+          name: 'convert-color',
           arguments: {
             input: '#FF0000'
           }
@@ -1619,7 +1619,7 @@ describe('MCP Server Handler Functions', () =&gt; {
     it('should handle conversion with specific target formats', async () =&gt; {
       const request = {
         params: {
-          name: 'convert-colour',
+          name: 'convert-color',
           arguments: {
             input: '#FF0000',
             to: ['hex', 'rgb']
@@ -1639,7 +1639,7 @@ describe('MCP Server Handler Functions', () =&gt; {
     it('should handle conversion errors', async () =&gt; {
       const request = {
         params: {
-          name: 'convert-colour',
+          name: 'convert-color',
           arguments: {
             input: 'invalid-color'
           }
@@ -1657,7 +1657,7 @@ describe('MCP Server Handler Functions', () =&gt; {
     it('should handle missing input', async () =&gt; {
       const request = {
         params: {
-          name: 'convert-colour',
+          name: 'convert-color',
           arguments: {}
         }
       };
@@ -1672,7 +1672,7 @@ describe('MCP Server Handler Functions', () =&gt; {
     it('should handle LAB and XYZ formats', async () =&gt; {
       const request = {
         params: {
-          name: 'convert-colour',
+          name: 'convert-color',
           arguments: {
             input: '#FF0000',
             to: ['lab', 'xyz']
@@ -2171,7 +2171,7 @@ describe('MCP Server Handler Functions', () =&gt; {
     it('should handle invalid tool arguments consistently', async () =&gt; {
       const invalidRequests = [
         {
-          name: 'convert-colour',
+          name: 'convert-color',
           arguments: { input: null }
         },
         {

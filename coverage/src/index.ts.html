@@ -2096,7 +2096,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
   return {
     tools: [
       {
-        name: 'convert-colour',
+        name: 'convert-color',
         description: `Convert colors between different formats (hex, RGB, HSL, HSB/HSV, CMYK, LAB, XYZ) - v${VERSION}`,
         inputSchema: {
           type: 'object',
@@ -2285,7 +2285,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
 &nbsp;
 // Handle tool execution
 server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-  if (request.params.name === 'convert-colour') {
+  if (request.params.name === 'convert-color') {
     try {
       const { input, from, to } = request.params.arguments as {
         input: string;

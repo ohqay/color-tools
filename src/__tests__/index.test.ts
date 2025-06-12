@@ -8,7 +8,7 @@ vi.mock('fs', () => ({
 }));
 
 describe('MCP Server Tools', () => {
-  describe('convert-colour tool', () => {
+  describe('convert-color tool', () => {
     it('should convert color successfully', () => {
       const input = '#FF0000';
       const result = ColorConverter.convert(input);
@@ -69,7 +69,7 @@ describe('MCP Server Tools', () => {
   });
 
   describe('Tool schemas and structure', () => {
-    it('should have proper convert-colour tool schema', () => {
+    it('should have proper convert-color tool schema', () => {
       // This tests the expected structure, not the actual server implementation
       const expectedSchema = {
         type: 'object',
@@ -115,7 +115,7 @@ describe('MCP Server Tools', () => {
   });
 
   describe('Tool response formats', () => {
-    it('should format convert-colour success response correctly', () => {
+    it('should format convert-color success response correctly', () => {
       const input = '#D4C7BA';
       const result = ColorConverter.convert(input);
       const detectedFormat = ColorConverter.detectFormat(input);
@@ -141,7 +141,7 @@ describe('MCP Server Tools', () => {
       expect(expectedResponse.cmyk).toBeDefined();
     });
 
-    it('should format convert-colour error response correctly', () => {
+    it('should format convert-color error response correctly', () => {
       const expectedErrorResponse = {
         success: false,
         error: 'Invalid color format or value',
