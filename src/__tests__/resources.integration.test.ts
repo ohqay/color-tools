@@ -16,9 +16,6 @@ vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
   StdioServerTransport: vi.fn()
 }));
 
-// Import after mocks are set up
-import '../index.js';
-
 describe('MCP Server Resources Integration', () => {
   describe('ListResourcesRequestSchema', () => {
     it('should list all available resources', async () => {

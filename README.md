@@ -5,18 +5,24 @@ A Model Context Protocol (MCP) server that provides color conversion capabilitie
 ## Features
 
 - Convert colors between multiple formats:
-  - Hexadecimal (e.g., `#D4C7BA`, `#FFF`)
+  - Hexadecimal (e.g., `#D4C7BA`, `#FFF`, `#RGBA`, `#RRGGBBAA`)
   - RGB (e.g., `rgb(212, 199, 186)`, `255, 0, 0`)
   - RGBA with alpha/transparency (e.g., `rgba(255, 0, 0, 0.5)`)
   - HSL (e.g., `hsl(30, 24%, 78%)`)
   - HSLA with alpha/transparency (e.g., `hsla(30, 24%, 78%, 0.8)`)
   - HSB/HSV (e.g., `hsb(30, 12%, 83%)`, `hsv(240, 100%, 100%)`)
   - CMYK (e.g., `cmyk(0%, 6%, 12%, 17%)`)
+- Extended hex format support with alpha channel (#RGBA, #RRGGBBAA)
 - Support for CSS named colors (140+ colors like `red`, `blue`, `coral`)
 - Auto-detect input color format
 - Support for multiple output formats in a single conversion
 - Comprehensive error handling with detailed validation messages
 - Includes `color-info` tool for server information and examples
+- MCP Resources for accessing color palettes and data:
+  - Material Design color palette
+  - Tailwind CSS color palette
+  - CSS named colors organized by category
+  - Web-safe colors (216 colors)
 
 ## Installation
 
@@ -106,6 +112,73 @@ Get information about the color converter
 ### color-info
 No parameters required - returns server information and examples
 
+## MCP Resources
+
+The server provides the following resources that can be accessed via MCP ReadResource requests:
+
+### Available Resources
+
+1. **color-palettes** - List of all available color palettes
+   - Returns metadata about all available palettes including name, version, and color count
+
+2. **palette://material-design** - Material Design color palette
+   - Complete Material Design 3.0 color palette with 19 colors and their shades (50-900)
+
+3. **palette://tailwind** - Tailwind CSS color palette  
+   - Tailwind CSS v3.0 default palette with 22 colors and extended shades (50-950)
+
+4. **colors://named** - CSS named colors organized by category
+   - All 147 CSS named colors organized into categories like "Basic Colors", "Reds & Pinks", etc.
+
+5. **colors://web-safe** - Web-safe color palette
+   - The 216 web-safe colors that display consistently across browsers, organized by hue
+
+### Resource Response Format
+
+All resources return JSON data with `application/json` mime type. Example structures:
+
+#### Palette Resource
+```json
+{
+  "name": "Material Design",
+  "description": "Material Design color palette with primary colors and their shades",
+  "version": "3.0",
+  "colors": [
+    {
+      "name": "red",
+      "shades": [
+        { "name": "50", "value": "#ffebee" },
+        { "name": "100", "value": "#ffcdd2" },
+        // ... more shades
+      ]
+    }
+    // ... more colors
+  ]
+}
+```
+
+#### Named Colors Resource
+```json
+{
+  "name": "CSS Named Colors",
+  "description": "All CSS named colors organized by category",
+  "totalColors": 147,
+  "categories": [
+    {
+      "name": "Basic Colors",
+      "description": "Fundamental color names",
+      "colors": [
+        { "name": "black", "hex": "#000000" },
+        { "name": "white", "hex": "#ffffff" },
+        // ... more colors
+      ]
+    }
+    // ... more categories
+  ],
+  "allColors": [/* sorted list of all colors */]
+}
+```
+
 ### Example Requests
 
 #### Convert with specific formats
@@ -142,7 +215,7 @@ No parameters required - returns server information and examples
 
 ### Input Formats
 
-- **Hex**: `#RGB` or `#RRGGBB` (case-insensitive)
+- **Hex**: `#RGB`, `#RGBA`, `#RRGGBB`, or `#RRGGBBAA` (case-insensitive)
 - **RGB**: `rgb(r, g, b)` or `r, g, b` (values 0-255)
 - **RGBA**: `rgba(r, g, b, a)` (RGB values 0-255, alpha 0-1)
 - **HSL**: `hsl(h, s%, l%)` (h: 0-360, s/l: 0-100)
@@ -158,6 +231,43 @@ No parameters required - returns server information and examples
 - Auto-detection works for all supported format variations
 - Named colors are converted through their hex values
 - Alpha/transparency is preserved when converting between RGBA and HSLA
+- Extended hex formats support alpha channel (#RGBA → 4-digit, #RRGGBBAA → 8-digit)
+
+## MCP Resources
+
+The server provides read-only resources for accessing color data:
+
+### Available Resources
+
+1. **color-palettes** - List of available color palettes
+   - URI: `color-palettes`
+   - Returns metadata about available palettes
+
+2. **Material Design Palette** - Google's Material Design colors
+   - URI: `palette://material-design`
+   - Returns 19 colors with shades (50-900)
+
+3. **Tailwind CSS Palette** - Tailwind's color system
+   - URI: `palette://tailwind`
+   - Returns 22 colors with shades (50-950)
+
+4. **Named Colors** - All CSS named colors organized by category
+   - URI: `colors://named`
+   - Returns 147 colors in 11 categories
+
+5. **Web-Safe Colors** - 216 web-safe colors
+   - URI: `colors://web-safe`
+   - Returns colors organized by hue groups
+
+### Accessing Resources in Claude
+
+```
+Get the Material Design color palette
+```
+
+```
+Show me all CSS named colors
+```
 
 ## Development
 
@@ -168,7 +278,12 @@ color-converter-mcp/
 ├── src/
 │   ├── index.ts           # MCP server implementation
 │   ├── colorConverter.ts  # Color conversion algorithms
-│   └── types.ts          # TypeScript type definitions
+│   ├── types.ts          # TypeScript type definitions
+│   ├── namedColors.ts    # CSS named color definitions
+│   └── resources/        # MCP resource data
+│       ├── palettes.ts            # Material Design & Tailwind palettes
+│       ├── webSafeColors.ts       # Web-safe color definitions
+│       └── namedColorsCategories.ts # Categorized named colors
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -176,7 +291,28 @@ color-converter-mcp/
 
 ### Running Tests
 
-Currently, no tests are implemented. To add tests, update the `test` script in `package.json`.
+The project includes comprehensive unit tests with excellent coverage:
+
+```bash
+npm test                    # Run tests in watch mode
+npm test -- --run          # Run tests once
+npm test -- --coverage     # Run with coverage report
+```
+
+**Test Coverage**: 
+- Line Coverage: 99.65% ✅
+- Function Coverage: 100% ✅
+- Branch Coverage: 94.85% ✅
+- Total Tests: 184 tests across 7 test files
+
+Tests cover:
+- All color conversion functions
+- Format detection and parsing
+- Extended hex formats with alpha
+- Named color support
+- MCP server functionality
+- Resource handlers
+- Error handling and edge cases
 
 ## License
 

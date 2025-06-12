@@ -680,5 +680,13 @@ export function getAllPalettes(): PaletteCollection[] {
 // Helper function to get a specific palette
 export function getPalette(name: string): PaletteCollection | undefined {
   const palettes = getAllPalettes();
-  return palettes.find(p => p.name.toLowerCase().replace(/\s+/g, '-') === name.toLowerCase());
+  return palettes.find(p => {
+    const normalizedPaletteName = p.name.toLowerCase().replace(/\s+/g, '-');
+    const normalizedSearchName = name.toLowerCase();
+    // Handle both 'tailwind' and 'tailwind-css'
+    if (normalizedPaletteName === 'tailwind-css' && normalizedSearchName === 'tailwind') {
+      return true;
+    }
+    return normalizedPaletteName === normalizedSearchName;
+  });
 }

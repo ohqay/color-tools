@@ -88,13 +88,13 @@ describe('Alpha Hex Format Support', () => {
     it('should still parse 3-digit hex without alpha', () => {
       const result = ColorConverter.hexToRGB('#F00');
       expect(result).toEqual({ r: 255, g: 0, b: 0 });
-      expect('a' in result).toBe(false);
+      expect(result && 'a' in result).toBe(false);
     });
 
     it('should still parse 6-digit hex without alpha', () => {
       const result = ColorConverter.hexToRGB('#FF0000');
       expect(result).toEqual({ r: 255, g: 0, b: 0 });
-      expect('a' in result).toBe(false);
+      expect(result && 'a' in result).toBe(false);
     });
 
     it('should convert RGB without alpha to 6-digit hex', () => {
