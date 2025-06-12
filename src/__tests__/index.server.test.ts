@@ -1,18 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
 
 // Mock the file system module to avoid reading package.json
-vi.mock('fs', () => ({
-  readFileSync: vi.fn(() => JSON.stringify({ version: '1.0.0' }))
+mock.module('fs', () => ({
+  readFileSync: mock(() => JSON.stringify({ version: '1.0.0' }))
 }));
 
 // Mock the path and url modules
-vi.mock('url', () => ({
-  fileURLToPath: vi.fn(() => '/mock/path/to/index.js')
+mock.module('url', () => ({
+  fileURLToPath: mock(() => '/mock/path/to/index.ts')
 }));
 
-vi.mock('path', () => ({
-  dirname: vi.fn(() => '/mock/path/to'),
-  join: vi.fn((...args) => args.join('/'))
+mock.module('path', () => ({
+  dirname: mock(() => '/mock/path/to'),
+  join: mock((...args) => args.join('/'))
 }));
 
 // Create a mock server that captures handler functions
@@ -21,50 +21,54 @@ let mockCallToolHandler: (request: any) => any;
 let mockListResourcesHandler: () => any;
 let mockReadResourceHandler: (request: any) => any;
 
+const mockSetRequestHandler = mock((schema: any, handler: (...args: any[]) => any) => {
+  // Store handlers for testing
+  const schemaName = schema?.name ?? schema;
+  if (schemaName?.includes?.('ListTools') || schema === 'list-tools') {
+    mockListToolsHandler = handler;
+  } else if (schemaName?.includes?.('CallTool') || schema === 'call-tool') {
+    mockCallToolHandler = handler;
+  } else if (schemaName?.includes?.('ListResources') || schema === 'list-resources') {
+    mockListResourcesHandler = handler;
+  } else if (schemaName?.includes?.('ReadResource') || schema === 'read-resource') {
+    mockReadResourceHandler = handler;
+  }
+});
+
+const mockConnect = mock(() => Promise.resolve(undefined));
+
 const mockServer = {
-  setRequestHandler: vi.fn((schema: any, handler: (...args: any[]) => any) => {
-    // Store handlers for testing
-    const schemaName = schema?.name ?? schema;
-    if (schemaName?.includes?.('ListTools') || schema === 'list-tools') {
-      mockListToolsHandler = handler;
-    } else if (schemaName?.includes?.('CallTool') || schema === 'call-tool') {
-      mockCallToolHandler = handler;
-    } else if (schemaName?.includes?.('ListResources') || schema === 'list-resources') {
-      mockListResourcesHandler = handler;
-    } else if (schemaName?.includes?.('ReadResource') || schema === 'read-resource') {
-      mockReadResourceHandler = handler;
-    }
-  }),
-  connect: vi.fn().mockResolvedValue(undefined)
+  setRequestHandler: mockSetRequestHandler,
+  connect: mockConnect
 };
 
+const MockServer = mock(() => mockServer);
+const MockStdioServerTransport = mock(() => ({}));
+
 // Mock the MCP SDK
-vi.mock('@modelcontextprotocol/sdk/server/index.js', () => ({
-  Server: vi.fn(() => mockServer)
+mock.module('@modelcontextprotocol/sdk/server/index.js', () => ({
+  Server: MockServer
 }));
 
-vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
-  StdioServerTransport: vi.fn(() => ({}))
+mock.module('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: MockStdioServerTransport
 }));
 
 // Mock schemas as simple objects
-vi.mock('@modelcontextprotocol/sdk/types.js', async () => {
-  const schemas = {
-    ListToolsRequestSchema: { name: 'ListToolsRequestSchema' },
-    CallToolRequestSchema: { name: 'CallToolRequestSchema' },
-    ListResourcesRequestSchema: { name: 'ListResourcesRequestSchema' },
-    ReadResourceRequestSchema: { name: 'ReadResourceRequestSchema' }
-  };
-  return schemas;
-});
+mock.module('@modelcontextprotocol/sdk/types.js', () => ({
+  ListToolsRequestSchema: { name: 'ListToolsRequestSchema' },
+  CallToolRequestSchema: { name: 'CallToolRequestSchema' },
+  ListResourcesRequestSchema: { name: 'ListResourcesRequestSchema' },
+  ReadResourceRequestSchema: { name: 'ReadResourceRequestSchema' }
+}));
+
+// Import the server module once to register handlers
+// This happens before any tests run
+await import('../index.js');
 
 describe('MCP Server Handler Functions', () => {
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    
-    // Reset modules and import the server module to register handlers
-    vi.resetModules();
-    await import('../index.js');
+  beforeEach(() => {
+    // Handler functions should already be populated from the import above
   });
 
   describe('ListTools Handler', () => {
@@ -613,7 +617,7 @@ describe('MCP Server Handler Functions', () => {
         }
       };
 
-      await expect(mockReadResourceHandler(request)).rejects.toThrow('Failed to read resource palette://unknown-palette: Palette not found: unknown-palette');
+      await expect(() => mockReadResourceHandler(request)).toThrow('Failed to read resource palette://unknown-palette: Palette not found: unknown-palette');
     });
 
     it('should handle unknown resource', async () => {
@@ -623,26 +627,22 @@ describe('MCP Server Handler Functions', () => {
         }
       };
 
-      await expect(mockReadResourceHandler(request)).rejects.toThrow('Failed to read resource unknown://resource: Unknown resource: unknown://resource');
+      await expect(() => mockReadResourceHandler(request)).toThrow('Failed to read resource unknown://resource: Unknown resource: unknown://resource');
     });
   });
 
   describe('Server Connection and Main Function', () => {
-    it('should connect server with transport', async () => {
-      const { StdioServerTransport } = await import('@modelcontextprotocol/sdk/server/stdio.js');
-      
-      // Import the server module which should trigger the main function
-      await import('../index.js');
-      
-      // The server connection happens during module import
-      expect(mockServer.connect).toHaveBeenCalled();
-      expect(StdioServerTransport).toHaveBeenCalled();
+    it('should have connected server with transport', () => {
+      // The server connection happens during module import at the top
+      // We check that the mocks were called during initialization
+      expect(mockConnect.mock.calls.length).toBeGreaterThan(0);
+      expect(MockStdioServerTransport.mock.calls.length).toBeGreaterThan(0);
     });
 
-    it('should register exactly 4 handlers', async () => {
-      // Import the server module to trigger handler registration
-      await import('../index.js');
-      expect(mockServer.setRequestHandler).toHaveBeenCalledTimes(4);
+    it('should have registered exactly 4 handlers', () => {
+      // Handler registration happens during module import at the top
+      // We check that the mock was called 4 times during initialization
+      expect(mockSetRequestHandler.mock.calls.length).toBe(4);
     });
   });
 
@@ -714,7 +714,7 @@ describe('MCP Server Handler Functions', () => {
           params: { uri }
         };
 
-        await expect(mockReadResourceHandler(request)).rejects.toThrow();
+        await expect(() => mockReadResourceHandler(request)).toThrow();
       }
     });
   });
