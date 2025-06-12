@@ -361,7 +361,7 @@ export function generateColorBlindSafePalette(
         'Failed to parse first base color',
         { 
           operation: 'generateColorBlindSafePalette',
-          input: firstBase
+          input: typeof firstBase === 'string' ? firstBase : JSON.stringify(firstBase)
         }
       );
     }

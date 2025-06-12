@@ -39,8 +39,8 @@ export class PerformanceMonitor {
   private startTime = Date.now();
 
   recordOperation(operation: string, duration: number, options: {
-    inputFormat?: string;
-    outputFormats?: string[];
+    inputFormat?: string | undefined;
+    outputFormats?: string[] | undefined;
     cacheHit?: boolean;
   } = {}): void {
     const metric: ConversionMetrics = {

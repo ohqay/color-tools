@@ -16,7 +16,7 @@ import { performanceMonitor, measureTime } from './core/monitoring/PerformanceMo
 import { 
   ColorError, 
   ColorErrorFactory,
-  ColorErrorCode, 
+  ColorErrorCode,
   errorHandler,
   safeExecute,
   safeExecuteAsync 
@@ -538,7 +538,7 @@ const handleCheckContrast = async (args: unknown) => {
   
   if (!result) {
     throw new ColorError(
-      'CONTRAST_CALCULATION_FAILED',
+      ColorErrorCode.CONTRAST_CALCULATION_FAILED,
       'Failed to calculate contrast ratio',
       { operation: 'checkContrast', metadata: { foreground, background } }
     );
@@ -590,7 +590,7 @@ const handleSimulateColorblind = async (args: unknown) => {
     );
     if (!result) {
       throw new ColorError(
-        'CONVERSION_FAILED',
+        ColorErrorCode.CONVERSION_FAILED,
         'Failed to simulate color blindness',
         { operation: 'simulateColorBlindness', input: color, metadata: { type } }
       );
@@ -668,7 +668,7 @@ const handleFindAccessibleColor = async (args: unknown) => {
   
   if (!result) {
     throw new ColorError(
-      'COLOR_NOT_FOUND',
+      ColorErrorCode.COLOR_NOT_FOUND,
       'Could not find an accessible color alternative',
       { 
         operation: 'findAccessibleColor',
@@ -790,6 +790,9 @@ const handleConvertTailwindColor = async (args: unknown) => {
       // Parse Tailwind color name like "blue-500" or just "blue"
       const parts = input.toLowerCase().split('-');
       const colorName = parts[0];
+      if (!colorName) {
+        throw new Error('Invalid Tailwind color format');
+      }
       const shade = parts[1] || '500'; // Default to 500 if no shade specified
       
       const color = getColorFn(colorName);
@@ -800,7 +803,7 @@ const handleConvertTailwindColor = async (args: unknown) => {
       const colorShade = color.shades.find((s: { name: string; value: string }) => s.name === shade);
       if (!colorShade) {
         throw new ColorError(
-          'COLOR_NOT_FOUND',
+          ColorErrorCode.COLOR_NOT_FOUND,
           `Shade ${shade} not found for color ${colorName}`,
           {
             operation: 'convert-tailwind-color',
@@ -852,7 +855,7 @@ const handleConvertTailwindColor = async (args: unknown) => {
       if (!result) {
         // If no exact match, provide helpful message with suggestion to use find-similar
         throw new ColorError(
-          'COLOR_NOT_FOUND',
+          ColorErrorCode.COLOR_NOT_FOUND,
           `No exact Tailwind color match found for hex value: ${input}`,
           {
             operation: 'convert-tailwind-color',
@@ -928,7 +931,7 @@ const handleConvertTailwindColor = async (args: unknown) => {
     
     default:
       throw new ColorError(
-        'UNSUPPORTED_FORMAT',
+        ColorErrorCode.UNSUPPORTED_FORMAT,
         `Unknown operation: ${operation}`,
         {
           operation: 'convert-tailwind-color',
@@ -1213,7 +1216,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     }
     else {
       throw new ColorError(
-        'RESOURCE_LOAD_FAILED',
+        ColorErrorCode.RESOURCE_LOAD_FAILED,
         `Unknown resource: ${uri}`,
         {
           operation: 'readResource',
@@ -1241,7 +1244,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   } catch (error) {
     if (error instanceof ColorError) throw error;
     throw new ColorError(
-      'RESOURCE_LOAD_FAILED',
+      ColorErrorCode.RESOURCE_LOAD_FAILED,
       `Failed to read resource ${uri}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       {
         operation: 'readResource',

@@ -29,12 +29,12 @@ export enum ColorErrorCode {
 }
 
 export interface ColorErrorContext {
-  operation?: string;
-  input?: string;
-  format?: string;
-  expectedRange?: { min: number; max: number };
-  suggestions?: string[];
-  metadata?: Record<string, unknown>;
+  operation?: string | undefined;
+  input?: string | undefined;
+  format?: string | undefined;
+  expectedRange?: { min: number; max: number } | undefined;
+  suggestions?: string[] | undefined;
+  metadata?: Record<string, unknown> | undefined;
 }
 
 export class ColorError extends Error {
