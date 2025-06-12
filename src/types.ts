@@ -1,4 +1,4 @@
-export type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'hsb' | 'hsv' | 'cmyk';
+export type ColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'hsb' | 'hsv' | 'cmyk';
 
 export interface RGB {
   r: number; // 0-255
@@ -6,10 +6,18 @@ export interface RGB {
   b: number; // 0-255
 }
 
+export interface RGBA extends RGB {
+  a: number; // 0-1
+}
+
 export interface HSL {
   h: number; // 0-360
   s: number; // 0-100
   l: number; // 0-100
+}
+
+export interface HSLA extends HSL {
+  a: number; // 0-1
 }
 
 export interface HSB {
@@ -28,13 +36,17 @@ export interface CMYK {
 export interface ConversionResult {
   hex?: string;
   rgb?: string;
+  rgba?: string;
   hsl?: string;
+  hsla?: string;
   hsb?: string;
   hsv?: string;
   cmyk?: string;
   rawValues?: {
     rgb?: RGB;
+    rgba?: RGBA;
     hsl?: HSL;
+    hsla?: HSLA;
     hsb?: HSB;
     cmyk?: CMYK;
   };

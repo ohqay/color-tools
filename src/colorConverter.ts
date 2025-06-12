@@ -1,19 +1,35 @@
-import { RGB, HSL, HSB, CMYK, ColorFormat, ConversionResult } from './types.js';
+import { RGB, RGBA, HSL, HSLA, HSB, CMYK, ColorFormat, ConversionResult } from './types.js';
+import { NAMED_COLORS } from './namedColors.js';
 
 export class ColorConverter {
   // Detect color format from input string
   static detectFormat(input: string): ColorFormat | null {
     const trimmed = input.trim().toLowerCase();
     
+    // Check for named colors first
+    if (NAMED_COLORS[trimmed]) {
+      return 'hex';
+    }
+    
     // Hex format: #RGB, #RRGGBB
     if (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(trimmed)) {
       return 'hex';
+    }
+    
+    // RGBA format: rgba(r,g,b,a)
+    if (/^rgba\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/i.test(trimmed)) {
+      return 'rgba';
     }
     
     // RGB format: rgb(r,g,b) or r,g,b
     if (/^rgb\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/i.test(trimmed) || 
         /^\d+\s*,\s*\d+\s*,\s*\d+$/.test(trimmed)) {
       return 'rgb';
+    }
+    
+    // HSLA format: hsla(h,s%,l%,a)
+    if (/^hsla\s*\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?\s*,\s*[\d.]+\s*\)$/i.test(trimmed)) {
+      return 'hsla';
     }
     
     // HSL format: hsl(h,s%,l%)
@@ -34,20 +50,39 @@ export class ColorConverter {
     return null;
   }
 
-  // Parse input string to RGB
-  static parseToRGB(input: string, format?: ColorFormat): RGB | null {
+  // Parse input string to RGB (with optional alpha)
+  static parseToRGB(input: string, format?: ColorFormat): RGB | RGBA | null {
     const detectedFormat = format || this.detectFormat(input);
     if (!detectedFormat) return null;
 
     const trimmed = input.trim();
+    const trimmedLower = trimmed.toLowerCase();
+
+    // Handle named colors
+    if (NAMED_COLORS[trimmedLower] && detectedFormat === 'hex') {
+      const namedColorHex = NAMED_COLORS[trimmedLower];
+      if (namedColorHex === 'transparent') {
+        return { r: 0, g: 0, b: 0, a: 0 } as RGBA;
+      }
+      if (namedColorHex === 'currentcolor') {
+        throw new Error('currentcolor is context-dependent and cannot be converted');
+      }
+      return this.hexToRGB(namedColorHex);
+    }
 
     switch (detectedFormat) {
       case 'hex':
         return this.hexToRGB(trimmed);
       case 'rgb':
         return this.parseRGBString(trimmed);
+      case 'rgba':
+        return this.parseRGBAString(trimmed);
       case 'hsl':
         return this.hslToRGB(this.parseHSLString(trimmed)!);
+      case 'hsla':
+        const hsla = this.parseHSLAString(trimmed)!;
+        const rgb = this.hslToRGB(hsla);
+        return { ...rgb, a: hsla.a } as RGBA;
       case 'hsb':
       case 'hsv':
         return this.hsbToRGB(this.parseHSBString(trimmed)!);
@@ -275,9 +310,32 @@ export class ColorConverter {
     const g = parseInt(match[2]);
     const b = parseInt(match[3]);
 
-    if (r > 255 || g > 255 || b > 255) return null;
+    if (r > 255 || g > 255 || b > 255 || r < 0 || g < 0 || b < 0) {
+      throw new Error(`RGB values must be between 0 and 255. Got: r=${r}, g=${g}, b=${b}`);
+    }
 
     return { r, g, b };
+  }
+
+  // Parse RGBA string
+  static parseRGBAString(input: string): RGBA | null {
+    const match = input.match(/rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/i);
+    if (!match) return null;
+
+    const r = parseInt(match[1]);
+    const g = parseInt(match[2]);
+    const b = parseInt(match[3]);
+    const a = parseFloat(match[4]);
+
+    if (r > 255 || g > 255 || b > 255 || r < 0 || g < 0 || b < 0) {
+      throw new Error(`RGB values must be between 0 and 255. Got: r=${r}, g=${g}, b=${b}`);
+    }
+    
+    if (a > 1 || a < 0) {
+      throw new Error(`Alpha value must be between 0 and 1. Got: ${a}`);
+    }
+
+    return { r, g, b, a };
   }
 
   // Parse HSL string
@@ -289,9 +347,37 @@ export class ColorConverter {
     const s = parseInt(match[2]);
     const l = parseInt(match[3]);
 
-    if (h > 360 || s > 100 || l > 100) return null;
+    if (h > 360 || h < 0) {
+      throw new Error(`Hue must be between 0 and 360. Got: ${h}`);
+    }
+    if (s > 100 || s < 0 || l > 100 || l < 0) {
+      throw new Error(`Saturation and Lightness must be between 0 and 100. Got: s=${s}, l=${l}`);
+    }
 
     return { h, s, l };
+  }
+
+  // Parse HSLA string
+  static parseHSLAString(input: string): HSLA | null {
+    const match = input.match(/hsla\s*\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*([\d.]+)\s*\)/i);
+    if (!match) return null;
+
+    const h = parseInt(match[1]);
+    const s = parseInt(match[2]);
+    const l = parseInt(match[3]);
+    const a = parseFloat(match[4]);
+
+    if (h > 360 || h < 0) {
+      throw new Error(`Hue must be between 0 and 360. Got: ${h}`);
+    }
+    if (s > 100 || s < 0 || l > 100 || l < 0) {
+      throw new Error(`Saturation and Lightness must be between 0 and 100. Got: s=${s}, l=${l}`);
+    }
+    if (a > 1 || a < 0) {
+      throw new Error(`Alpha value must be between 0 and 1. Got: ${a}`);
+    }
+
+    return { h, s, l, a };
   }
 
   // Parse HSB/HSV string
@@ -303,7 +389,12 @@ export class ColorConverter {
     const s = parseInt(match[2]);
     const b = parseInt(match[3]);
 
-    if (h > 360 || s > 100 || b > 100) return null;
+    if (h > 360 || h < 0) {
+      throw new Error(`Hue must be between 0 and 360. Got: ${h}`);
+    }
+    if (s > 100 || s < 0 || b > 100 || b < 0) {
+      throw new Error(`Saturation and Brightness must be between 0 and 100. Got: s=${s}, b=${b}`);
+    }
 
     return { h, s, b };
   }
@@ -318,7 +409,9 @@ export class ColorConverter {
     const y = parseInt(match[3]);
     const k = parseInt(match[4]);
 
-    if (c > 100 || m > 100 || y > 100 || k > 100) return null;
+    if (c > 100 || c < 0 || m > 100 || m < 0 || y > 100 || y < 0 || k > 100 || k < 0) {
+      throw new Error(`CMYK values must be between 0 and 100. Got: c=${c}, m=${m}, y=${y}, k=${k}`);
+    }
 
     return { c, m, y, k };
   }
@@ -328,8 +421,16 @@ export class ColorConverter {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
   }
 
+  static formatRGBA(rgba: RGBA): string {
+    return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
+  }
+
   static formatHSL(hsl: HSL): string {
     return `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+  }
+
+  static formatHSLA(hsla: HSLA): string {
+    return `hsla(${hsla.h}, ${hsla.s}%, ${hsla.l}%, ${hsla.a})`;
   }
 
   static formatHSB(hsb: HSB): string {
@@ -342,14 +443,19 @@ export class ColorConverter {
 
   // Main conversion method
   static convert(input: string, from?: ColorFormat, to?: ColorFormat[]): ConversionResult {
-    // Parse input to RGB
-    const rgb = this.parseToRGB(input, from);
-    if (!rgb) {
+    // Parse input to RGB/RGBA
+    const rgbOrRgba = this.parseToRGB(input, from);
+    if (!rgbOrRgba) {
       throw new Error('Invalid color format or value');
     }
 
+    // Check if we have alpha channel
+    const hasAlpha = 'a' in rgbOrRgba;
+    const rgb: RGB = { r: rgbOrRgba.r, g: rgbOrRgba.g, b: rgbOrRgba.b };
+    const alpha = hasAlpha ? (rgbOrRgba as RGBA).a : undefined;
+
     // If no target formats specified, return all
-    const targetFormats = to || ['hex', 'rgb', 'hsl', 'hsb', 'cmyk'];
+    const targetFormats = to || ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk'];
     const result: ConversionResult = { rawValues: { rgb } };
 
     for (const format of targetFormats) {
@@ -360,10 +466,25 @@ export class ColorConverter {
         case 'rgb':
           result.rgb = this.formatRGB(rgb);
           break;
+        case 'rgba':
+          if (alpha !== undefined) {
+            const rgba: RGBA = { ...rgb, a: alpha };
+            result.rgba = this.formatRGBA(rgba);
+            result.rawValues!.rgba = rgba;
+          }
+          break;
         case 'hsl':
           const hsl = this.rgbToHSL(rgb);
           result.hsl = this.formatHSL(hsl);
           result.rawValues!.hsl = hsl;
+          break;
+        case 'hsla':
+          if (alpha !== undefined) {
+            const hsl = this.rgbToHSL(rgb);
+            const hsla: HSLA = { ...hsl, a: alpha };
+            result.hsla = this.formatHSLA(hsla);
+            result.rawValues!.hsla = hsla;
+          }
           break;
         case 'hsb':
         case 'hsv':
