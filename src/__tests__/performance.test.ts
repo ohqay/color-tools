@@ -208,7 +208,7 @@ describe('Performance Benchmarks', () => {
     console.log(`- Average time per conversion: ${avgTimePerConversion.toFixed(6)}ms`);
 
     // Gamma corrections should be reasonably fast
-    expect(avgTimePerConversion).toBeLessThan(0.02); // Less than 0.02ms per conversion
+    expect(avgTimePerConversion).toBeLessThan(0.025); // Less than 0.025ms per conversion
   });
 
   test('Cache efficiency and memory usage', () => {

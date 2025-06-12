@@ -12,6 +12,7 @@ import { ColorConverter } from './colorConverter.js';
 import { ColorFormat } from './types.js';
 import { HarmonyType, HarmonyOptions } from './colorHarmony.js';
 import { ColorBlindnessType } from './colorBlindness.js';
+import { performanceMonitor, measureTime } from './core/monitoring/PerformanceMonitor.js';
 
 // Lazy imports - only load when needed
 let ColorHarmony: any;
@@ -20,6 +21,7 @@ let simulateColorBlindness: any, simulateAllColorBlindness: any, colorBlindnessI
 let getAllPalettes: any, getPalette: any;
 let webSafeColorsResource: any;
 let namedColorsResource: any;
+let tailwindV4Palette: any, getTailwindV4Color: any, findTailwindV4ColorByHex: any, searchTailwindV4Colors: any;
 
 // Pre-computed constants for performance
 const VERSION = '1.0.0'; // Static version to avoid file system read
@@ -121,6 +123,17 @@ const loadResourceData = async () => {
     namedColorsResource = namedColors.namedColorsResource;
   }
   return { webSafeColorsResource, namedColorsResource };
+};
+
+const loadTailwindV4Functions = async () => {
+  if (!tailwindV4Palette) {
+    const module = await import('./resources/tailwindV4Colors.js');
+    tailwindV4Palette = module.tailwindV4Palette;
+    getTailwindV4Color = module.getTailwindV4Color;
+    findTailwindV4ColorByHex = module.findTailwindV4ColorByHex;
+    searchTailwindV4Colors = module.searchTailwindV4Colors;
+  }
+  return { tailwindV4Palette, getTailwindV4Color, findTailwindV4ColorByHex, searchTailwindV4Colors };
 };
 
 // Create server instance
@@ -325,6 +338,47 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['color1', 'color2'],
         },
       },
+      {
+        name: 'convert-tailwind-color',
+        description: 'Convert between Tailwind CSS V4 color names and other color formats. Find Tailwind colors by hex value or search by name.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            input: {
+              type: 'string',
+              description: 'The input to convert. Can be a Tailwind color name (e.g., "blue-500"), hex value (e.g., "#3b82f6"), or search query',
+            },
+            operation: {
+              type: 'string',
+              enum: ['to-hex', 'from-hex', 'search', 'get-color', 'get-all-shades'],
+              description: 'Operation to perform: to-hex (convert Tailwind name to hex), from-hex (find Tailwind name by hex), search (search colors), get-color (get specific color), get-all-shades (get all shades of a color)',
+            },
+            outputFormat: {
+              type: 'string',
+              enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk'],
+              description: 'Output format for color values (default: hex)',
+            },
+          },
+          required: ['input', 'operation'],
+        },
+      },
+      {
+        name: 'get-performance-stats',
+        description: 'Get performance statistics and monitoring data for color operations',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            detailed: {
+              type: 'boolean',
+              description: 'Include detailed performance breakdown (default: false)',
+            },
+            minutesBack: {
+              type: 'number',
+              description: 'Number of minutes back to analyze (default: 5)',
+            },
+          },
+        },
+      },
     ],
   };
 });
@@ -335,7 +389,17 @@ const handleConvertcolor = async (args: any) => {
   
   validateColorInput(input, 'Input color value');
   
-  const result = ColorConverter.convert(input, from, to);
+  const { result, duration } = measureTime(() => {
+    return ColorConverter.convert(input, from, to);
+  });
+  
+  // Record performance metrics
+  performanceMonitor.recordOperation('convert-color', duration, {
+    inputFormat: from,
+    outputFormats: to,
+    cacheHit: false // Basic assumption, could be enhanced with actual cache hit detection
+  });
+  
   const response: Record<string, any> = { success: true, input };
   
   // Add detected format if not specified
@@ -577,6 +641,142 @@ const handleMixColors = async (args: any) => {
   return createSuccessResponse(response);
 };
 
+const handleConvertTailwindColor = async (args: any) => {
+  const { input, operation, outputFormat } = args as {
+    input: string;
+    operation: 'to-hex' | 'from-hex' | 'search' | 'get-color' | 'get-all-shades';
+    outputFormat?: ColorFormat;
+  };
+  
+  validateColorInput(input, 'Input');
+  if (!operation) throw new Error('Operation is required');
+  
+  const { getTailwindV4Color: getColorFn, findTailwindV4ColorByHex: findByHexFn, searchTailwindV4Colors: searchFn } = await loadTailwindV4Functions();
+  
+  let response: Record<string, any> = {
+    success: true,
+    input,
+    operation,
+  };
+  
+  switch (operation) {
+    case 'to-hex':
+    case 'get-color': {
+      // Parse Tailwind color name like "blue-500" or just "blue"
+      const parts = input.toLowerCase().split('-');
+      const colorName = parts[0];
+      const shade = parts[1] || '500'; // Default to 500 if no shade specified
+      
+      const color = getColorFn(colorName);
+      if (!color) {
+        throw new Error(`Tailwind color not found: ${colorName}`);
+      }
+      
+      const colorShade = color.shades.find((s: any) => s.name === shade);
+      if (!colorShade) {
+        throw new Error(`Shade ${shade} not found for color ${colorName}`);
+      }
+      
+      response.result = {
+        tailwindName: `${colorName}-${shade}`,
+        colorName,
+        shade,
+        value: colorShade.value,
+      };
+      
+      // Convert to other formats if requested
+      if (outputFormat && outputFormat !== 'hex') {
+        const converted = ColorConverter.convert(colorShade.value, 'hex', [outputFormat]);
+        response.result.convertedValue = converted[outputFormat];
+      }
+      break;
+    }
+    
+    case 'get-all-shades': {
+      const colorName = input.toLowerCase();
+      const color = getColorFn(colorName);
+      if (!color) {
+        throw new Error(`Tailwind color not found: ${colorName}`);
+      }
+      
+      response.result = {
+        colorName,
+        shades: color.shades.map((shade: any) => ({
+          name: shade.name,
+          tailwindName: `${colorName}-${shade.name}`,
+          value: shade.value,
+          ...(outputFormat && outputFormat !== 'hex' ? {
+            convertedValue: ColorConverter.convert(shade.value, 'hex', [outputFormat])[outputFormat]
+          } : {})
+        }))
+      };
+      break;
+    }
+    
+    case 'from-hex': {
+      // Find Tailwind color by hex value
+      const result = findByHexFn(input);
+      if (!result) {
+        throw new Error(`No Tailwind color found for hex value: ${input}`);
+      }
+      
+      response.result = {
+        hexValue: input,
+        tailwindName: `${result.color}-${result.shade}`,
+        colorName: result.color,
+        shade: result.shade,
+      };
+      break;
+    }
+    
+    case 'search': {
+      // Search for colors by name
+      const results = searchFn(input);
+      if (results.length === 0) {
+        throw new Error(`No Tailwind colors found matching: ${input}`);
+      }
+      
+      response.result = {
+        query: input,
+        matches: results.slice(0, 20).map((result: any) => ({ // Limit to 20 results
+          tailwindName: `${result.color}-${result.shade}`,
+          colorName: result.color,
+          shade: result.shade,
+          value: result.value,
+          ...(outputFormat && outputFormat !== 'hex' ? {
+            convertedValue: ColorConverter.convert(result.value, 'hex', [outputFormat])[outputFormat]
+          } : {})
+        })),
+        totalMatches: results.length,
+      };
+      break;
+    }
+    
+    default:
+      throw new Error(`Unknown operation: ${operation}`);
+  }
+  
+  return createSuccessResponse(response);
+};
+
+const handleGetPerformanceStats = async (args: any) => {
+  const { detailed = false, minutesBack = 5 } = args as { detailed?: boolean; minutesBack?: number };
+  
+  const stats = detailed 
+    ? performanceMonitor.getRecentReport(minutesBack)
+    : { stats: performanceMonitor.getStats() };
+
+  const response = {
+    success: true,
+    performanceData: stats,
+    summary: performanceMonitor.getSummary(),
+    isPerformanceDegrading: performanceMonitor.isPerformanceDegrading(),
+    timestamp: Date.now()
+  };
+
+  return createSuccessResponse(response);
+};
+
 // Handle tool execution
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
@@ -595,6 +795,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await handleFindAccessibleColor(args);
       case 'mix-colors':
         return await handleMixColors(args);
+      case 'convert-tailwind-color':
+        return await handleConvertTailwindColor(args);
+      case 'get-performance-stats':
+        return await handleGetPerformanceStats(args);
       case 'color-info':
         return handleColorInfo();
       default:
@@ -608,6 +812,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       'simulate-colorblind': 'Please provide a valid color in any supported format',
       'find-accessible-color': 'Please provide valid target and background colors in any supported format',
       'mix-colors': 'Please provide two valid colors in any supported format',
+      'convert-tailwind-color': 'Please provide a valid input for the specified operation. For to-hex/get-color: use "blue-500" or "blue". For from-hex: use "#3b82f6". For search: use color name like "blue". For get-all-shades: use color name like "blue".',
+      'get-performance-stats': 'Performance statistics request failed. Optional parameters: detailed (boolean), minutesBack (number, default: 5)',
     };
     
     return createErrorResponse(error, errorHints[name] || 'Please check your input parameters');
@@ -736,6 +942,12 @@ const resourceList = {
       mimeType: 'application/json',
     },
     {
+      uri: 'palette://tailwind-v4',
+      name: 'Tailwind CSS V4 Colors',
+      description: 'Tailwind CSS v4.0 modernized P3 color palette using OKLCH color space',
+      mimeType: 'application/json',
+    },
+    {
       uri: 'colors://named',
       name: 'CSS Named Colors',
       description: 'All CSS named colors organized by category',
@@ -779,29 +991,48 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     // Handle color-palettes resource
     if (uri === 'color-palettes') {
       const { getAllPalettes: getAllPalettesFn } = await loadPaletteFunctions();
+      const { tailwindV4Palette: v4Palette } = await loadTailwindV4Functions();
       const palettes = getAllPalettesFn();
+      
       const paletteInfo = {
-        palettes: palettes.map((p: any) => ({
-          id: p.name.toLowerCase().replace(/\s+/g, '-'),
-          name: p.name,
-          description: p.description,
-          version: p.version,
-          colorCount: p.colors.length,
-          uri: `palette://${p.name.toLowerCase().replace(/\s+/g, '-')}`,
-        })),
+        palettes: [
+          ...palettes.map((p: any) => ({
+            id: p.name.toLowerCase().replace(/\s+/g, '-'),
+            name: p.name,
+            description: p.description,
+            version: p.version,
+            colorCount: p.colors.length,
+            uri: `palette://${p.name.toLowerCase().replace(/\s+/g, '-')}`,
+          })),
+          {
+            id: 'tailwind-v4',
+            name: v4Palette.name,
+            description: v4Palette.description,
+            version: v4Palette.version,
+            colorCount: v4Palette.colors.length,
+            uri: 'palette://tailwind-v4',
+            oklchBased: v4Palette.oklchBased,
+          }
+        ],
       };
       content = formatJSON(paletteInfo);
     }
     // Handle specific palette resources
     else if (uri.startsWith('palette://')) {
       const paletteName = uri.replace('palette://', '');
-      const { getPalette: getPaletteFn } = await loadPaletteFunctions();
-      const palette = getPaletteFn(paletteName);
       
-      if (!palette) {
-        throw new Error(`Palette not found: ${paletteName}`);
+      if (paletteName === 'tailwind-v4') {
+        const { tailwindV4Palette: v4Palette } = await loadTailwindV4Functions();
+        content = formatJSON(v4Palette);
+      } else {
+        const { getPalette: getPaletteFn } = await loadPaletteFunctions();
+        const palette = getPaletteFn(paletteName);
+        
+        if (!palette) {
+          throw new Error(`Palette not found: ${paletteName}`);
+        }
+        content = formatJSON(palette);
       }
-      content = formatJSON(palette);
     }
     // Handle named colors resource
     else if (uri === 'colors://named') {
