@@ -1,0 +1,33 @@
+{
+  "name": "color-converter-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for converting colors between different formats (hex, RGB, HSL, HSB/HSV, CMYK)",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "color-converter-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "color",
+    "converter",
+    "rgb",
+    "hsl",
+    "hsb",
+    "cmyk",
+    "hex"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@types/node": "^24.0.1",
+    "tsx": "^4.20.1",
+    "typescript": "^5.8.3"
+  }
+}

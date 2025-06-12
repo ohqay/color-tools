@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "color-converter": {
+      "command": "node",
+      "args": ["/Users/tarek/development/creating-mcp/color-converter-mcp/dist/index.js"]
+    }
+  }
+}
