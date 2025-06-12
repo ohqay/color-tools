@@ -60,7 +60,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: 'convert-colour',
-        description: `Convert colors between different formats (hex, RGB, HSL, HSB/HSV, CMYK) - v${VERSION}`,
+        description: `Convert colors between different formats (hex, RGB, HSL, HSB/HSV, CMYK, LAB, XYZ) - v${VERSION}`,
         inputSchema: {
           type: 'object',
           properties: {
@@ -70,14 +70,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             from: {
               type: 'string',
-              enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk'],
+              enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk', 'lab', 'xyz'],
               description: 'Source format (optional - will auto-detect if not specified)',
             },
             to: {
               type: 'array',
               items: {
                 type: 'string',
-                enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk'],
+                enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk', 'lab', 'xyz'],
               },
               description: 'Target format(s) to convert to. If not specified, converts to all formats.',
             },
@@ -208,6 +208,40 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['targetColor', 'backgroundColor'],
         },
       },
+      {
+        name: 'mix-colors',
+        description: 'Mix two colors using different blend modes. Normal mode mixes in LAB space for perceptually uniform results.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            color1: {
+              type: 'string',
+              description: 'First color to mix (any supported format)',
+            },
+            color2: {
+              type: 'string',
+              description: 'Second color to mix (any supported format)',
+            },
+            ratio: {
+              type: 'number',
+              description: 'Mix ratio (0-1). 0 = 100% color1, 1 = 100% color2, 0.5 = 50/50 mix. Default: 0.5',
+              minimum: 0,
+              maximum: 1,
+            },
+            mode: {
+              type: 'string',
+              enum: ['normal', 'multiply', 'screen', 'overlay'],
+              description: 'Blend mode. Normal uses LAB space for perceptual uniformity. Default: normal',
+            },
+            outputFormat: {
+              type: 'string',
+              enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk', 'lab', 'xyz'],
+              description: 'Output format for the mixed color. If not specified, returns all formats.',
+            },
+          },
+          required: ['color1', 'color2'],
+        },
+      },
     ],
   };
 });
@@ -253,6 +287,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       if (result.hsb) response.hsb = result.hsb;
       if (result.hsv) response.hsv = result.hsv;
       if (result.cmyk) response.cmyk = result.cmyk;
+      if (result.lab) response.lab = result.lab;
+      if (result.xyz) response.xyz = result.xyz;
 
       return {
         content: [
@@ -399,6 +435,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           name: 'CMYK',
           examples: ['cmyk(0%, 100%, 100%, 0%)', 'cmyk(0%, 6%, 12%, 17%)'],
           description: 'Cyan, Magenta, Yellow, Key/Black (0-100%)'
+        },
+        lab: {
+          name: 'LAB',
+          examples: ['lab(50%, 25, -50)', 'lab(53.24%, 80.09, 67.2)'],
+          description: 'CIE LAB color space - L* (lightness 0-100%), a* (green-red), b* (blue-yellow)'
+        },
+        xyz: {
+          name: 'XYZ',
+          examples: ['xyz(41.24, 21.26, 1.93)', 'xyz(95.047, 100, 108.883)'],
+          description: 'CIE XYZ tristimulus values based on D65 illuminant'
         }
       },
       features: [
@@ -410,7 +456,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         'Alpha/transparency support (RGBA, HSLA)',
         'Detailed validation with helpful error messages',
         'Color harmony generation (complementary, analogous, triadic, etc.)',
-        'Custom angle adjustments for fine-tuning harmonies'
+        'Custom angle adjustments for fine-tuning harmonies',
+        'LAB and XYZ color space support for scientific color representation',
+        'Perceptually uniform color mixing in LAB space',
+        'Multiple blend modes (normal, multiply, screen, overlay)'
       ],
       colorHarmonies: {
         complementary: 'Two colors opposite on the color wheel',
@@ -702,6 +751,95 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred',
                 hint: 'Please provide valid target and background colors in any supported format',
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  }
+
+  if (request.params.name === 'mix-colors') {
+    try {
+      const { color1, color2, ratio, mode, outputFormat } = request.params.arguments as {
+        color1: string;
+        color2: string;
+        ratio?: number;
+        mode?: 'normal' | 'multiply' | 'screen' | 'overlay';
+        outputFormat?: ColorFormat;
+      };
+
+      // Validate inputs
+      if (!color1 || typeof color1 !== 'string') {
+        throw new Error('First color is required');
+      }
+      if (!color2 || typeof color2 !== 'string') {
+        throw new Error('Second color is required');
+      }
+
+      // Mix colors
+      const result = ColorConverter.mixColors(
+        color1,
+        color2,
+        ratio ?? 0.5,
+        mode ?? 'normal'
+      );
+
+      // Format response
+      const response: Record<string, any> = {
+        success: true,
+        color1,
+        color2,
+        mixRatio: result.mixRatio,
+        blendMode: result.mode,
+      };
+
+      // Add specific format or all formats
+      if (outputFormat) {
+        response.result = result[outputFormat];
+      } else {
+        response.result = {};
+        if (result.hex) response.result.hex = result.hex;
+        if (result.rgb) response.result.rgb = result.rgb;
+        if (result.rgba) response.result.rgba = result.rgba;
+        if (result.hsl) response.result.hsl = result.hsl;
+        if (result.hsla) response.result.hsla = result.hsla;
+        if (result.hsb) response.result.hsb = result.hsb;
+        if (result.hsv) response.result.hsv = result.hsv;
+        if (result.cmyk) response.result.cmyk = result.cmyk;
+        if (result.lab) response.result.lab = result.lab;
+        if (result.xyz) response.result.xyz = result.xyz;
+      }
+
+      // Add blend mode description
+      const blendModeDescriptions: Record<string, string> = {
+        normal: 'Mixed in LAB color space for perceptually uniform blending',
+        multiply: 'Darkens by multiplying color values',
+        screen: 'Lightens by inverting, multiplying, and inverting again',
+        overlay: 'Combines multiply and screen based on base color',
+      };
+      response.blendModeDescription = blendModeDescriptions[mode ?? 'normal'];
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+                hint: 'Please provide two valid colors in any supported format',
               },
               null,
               2
