@@ -100,7 +100,7 @@ export class PerformanceMonitor {
         };
       }
       
-      const breakdown = operationBreakdown[metric.operation]!;
+      const breakdown = operationBreakdown[metric.operation] as { count: number; totalTime: number; averageTime: number };
       breakdown.count++;
       breakdown.totalTime += metric.duration;
       breakdown.averageTime = breakdown.totalTime / breakdown.count;
