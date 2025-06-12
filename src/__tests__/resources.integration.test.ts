@@ -1,4 +1,4 @@
-import { describe, it, expect, mock } from 'bun:test';
+import { describe, it, expect } from 'bun:test';
 
 // Note: Bun doesn't support module mocking in the same way as Vitest.
 // These tests focus on validating the structure and patterns of resources

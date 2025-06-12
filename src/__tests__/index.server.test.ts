@@ -64,9 +64,7 @@ mock.module('@modelcontextprotocol/sdk/types.js', () => ({
 
 // Import the server module and wait for initialization
 // This happens before any tests run
-let serverModule: any;
-const initializationPromise = import('../index.js').then((module) => {
-  serverModule = module;
+const initializationPromise = import('../index.js').then((_module) => {
   // Give some time for the main() function to complete
   return new Promise(resolve => setTimeout(resolve, 100));
 });
