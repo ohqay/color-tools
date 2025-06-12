@@ -220,7 +220,11 @@ export function simulateAllColorBlindness(color: string | RGB): Record<ColorBlin
     simulated: RGB;
     hex: string;
     info: ColorBlindnessInfo;
-  }> = {} as any;
+  }> = {} as Record<ColorBlindnessType, {
+    simulated: RGB;
+    hex: string;
+    info: ColorBlindnessInfo;
+  }>;
 
   for (const type of Object.keys(colorBlindnessInfo) as ColorBlindnessType[]) {
     const simulated = simulateColorBlindness(color, type);

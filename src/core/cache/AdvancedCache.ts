@@ -23,11 +23,11 @@ export interface CacheConfig {
   maxSize?: number;
   ttlMs?: number;
   smartSizing?: boolean;
-  preWarmEntries?: { key: string; value: any }[];
+  preWarmEntries?: { key: string; value: unknown }[];
   enableMetrics?: boolean;
 }
 
-export class AdvancedCache<T = any> {
+export class AdvancedCache<T = unknown> {
   private cache = new Map<string, CacheEntry<T>>();
   private maxSize: number;
   private ttlMs: number;
@@ -92,7 +92,7 @@ export class AdvancedCache<T = any> {
     
     // Check if key already exists
     if (this.cache.has(key)) {
-      const entry = this.cache.get(key)!;
+      const entry = this.cache.get(key) as CacheEntry<T>;
       entry.value = value;
       entry.timestamp = now;
       entry.lastAccessed = now;
@@ -153,9 +153,9 @@ export class AdvancedCache<T = any> {
   }
 
   // Pre-warm cache with common entries
-  private preWarmCache(entries: { key: string; value: any }[]): void {
+  private preWarmCache(entries: { key: string; value: unknown }[]): void {
     for (const { key, value } of entries) {
-      this.set(key, value);
+      this.set(key, value as T);
     }
   }
 
@@ -259,7 +259,7 @@ export class AdvancedCache<T = any> {
   }
 
   // Export cache state for analysis
-  exportState(): any {
+  exportState(): Record<string, unknown> {
     return {
       config: {
         maxSize: this.maxSize,

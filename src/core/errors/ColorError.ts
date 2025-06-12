@@ -34,7 +34,7 @@ export interface ColorErrorContext {
   format?: string;
   expectedRange?: { min: number; max: number };
   suggestions?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class ColorError extends Error {
@@ -62,7 +62,7 @@ export class ColorError extends Error {
     }
   }
 
-  toJSON(): any {
+  toJSON(): Record<string, unknown> {
     return {
       name: this.name,
       code: this.code,
