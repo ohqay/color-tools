@@ -11,9 +11,9 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "test": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest watch",
+    "test": "bun test src/",
+    "test:coverage": "bun test --coverage src/",
+    "test:watch": "bun test --watch src/",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

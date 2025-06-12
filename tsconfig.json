@@ -43,5 +43,5 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
   "include": ["src/**/*", "examples/**/*", "vitest.config.ts"],
-  "exclude": ["node_modules", "dist", "coverage"]
+  "exclude": ["node_modules", "dist", "coverage", "src/**/*.test.ts", "**/*.test.ts"]
 }
