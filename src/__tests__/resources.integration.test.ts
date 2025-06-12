@@ -1,14 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, mock } from 'bun:test';
 
-// Mock the file system module to avoid reading package.json
-vi.mock('fs', () => ({
-  readFileSync: vi.fn(() => JSON.stringify({ version: '1.0.0' }))
-}));
-
-// Mock the stdio transport
-vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
-  StdioServerTransport: vi.fn()
-}));
+// Note: Bun doesn't support module mocking in the same way as Vitest.
+// These tests focus on validating the structure and patterns of resources
+// without requiring actual server instantiation.
 
 describe('MCP Server Resources Integration', () => {
   describe('ListResourcesRequestSchema', () => {

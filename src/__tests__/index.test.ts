@@ -1,15 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, test, expect } from 'bun:test';
 import { ColorConverter } from '../colorConverter.js';
 import type { ColorFormat } from '../types.js';
 
-// Mock the file system module to avoid reading package.json
-vi.mock('fs', () => ({
-  readFileSync: vi.fn(() => JSON.stringify({ version: '1.0.0' }))
-}));
-
 describe('MCP Server Tools', () => {
   describe('convert-color tool', () => {
-    it('should convert color successfully', () => {
+    test('should convert color successfully', () => {
       const input = '#FF0000';
       const result = ColorConverter.convert(input);
 
@@ -20,7 +15,7 @@ describe('MCP Server Tools', () => {
       expect(result.cmyk).toBe('cmyk(0%, 100%, 100%, 0%)');
     });
 
-    it('should auto-detect format', () => {
+    test('should auto-detect format', () => {
       const input = 'rgb(255, 0, 0)';
       const detected = ColorConverter.detectFormat(input);
       expect(detected).toBe('rgb');
@@ -29,7 +24,7 @@ describe('MCP Server Tools', () => {
       expect(result.hex).toBe('#ff0000');
     });
 
-    it('should convert to specific formats only', () => {
+    test('should convert to specific formats only', () => {
       const input = '#FF0000';
       const to: ColorFormat[] = ['hex', 'rgb'];
       const result = ColorConverter.convert(input, undefined, to);
@@ -40,7 +35,7 @@ describe('MCP Server Tools', () => {
       expect(result.cmyk).toBeUndefined();
     });
 
-    it('should handle named colors', () => {
+    test('should handle named colors', () => {
       const input = 'red';
       const detected = ColorConverter.detectFormat(input);
       expect(detected).toBe('hex');
@@ -50,7 +45,7 @@ describe('MCP Server Tools', () => {
       expect(result.rgb).toBe('rgb(255, 0, 0)');
     });
 
-    it('should handle RGBA colors', () => {
+    test('should handle RGBA colors', () => {
       const input = 'rgba(255, 0, 0, 0.5)';
       const result = ColorConverter.convert(input);
 
@@ -58,30 +53,30 @@ describe('MCP Server Tools', () => {
       expect(result.hsla).toBe('hsla(0, 100%, 50%, 0.5)');
     });
 
-    it('should handle errors gracefully', () => {
+    test('should handle errors gracefully', () => {
       const input = 'invalid-color';
       expect(() => ColorConverter.convert(input)).toThrow('Invalid color format or value');
     });
 
-    it('should validate input', () => {
+    test('should validate input', () => {
       expect(() => ColorConverter.convert('')).toThrow('Invalid color format or value');
     });
   });
 
   describe('Tool schemas and structure', () => {
-    it('should have proper convert-color tool schema', () => {
+    test('should have proper convert-color tool schema', () => {
       // This tests the expected structure, not the actual server implementation
       const expectedSchema = {
         type: 'object',
         properties: {
           input: {
             type: 'string',
-            description: expect.stringContaining('color value to convert')
+            description: 'The color value to convert'
           },
           from: {
             type: 'string',
             enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk'],
-            description: expect.stringContaining('Source format')
+            description: 'Source format (auto-detected if not specified)'
           },
           to: {
             type: 'array',
@@ -89,7 +84,7 @@ describe('MCP Server Tools', () => {
               type: 'string',
               enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk']
             },
-            description: expect.stringContaining('Target format')
+            description: 'Target formats to convert to (defaults to all)'
           }
         },
         required: ['input']
@@ -103,7 +98,7 @@ describe('MCP Server Tools', () => {
       expect(expectedSchema.properties.to.type).toBe('array');
     });
 
-    it('should have proper color-info tool schema', () => {
+    test('should have proper color-info tool schema', () => {
       const expectedSchema = {
         type: 'object',
         properties: {}
@@ -115,7 +110,7 @@ describe('MCP Server Tools', () => {
   });
 
   describe('Tool response formats', () => {
-    it('should format convert-color success response correctly', () => {
+    test('should format convert-color success response correctly', () => {
       const input = '#D4C7BA';
       const result = ColorConverter.convert(input);
       const detectedFormat = ColorConverter.detectFormat(input);
@@ -141,11 +136,11 @@ describe('MCP Server Tools', () => {
       expect(expectedResponse.cmyk).toBeDefined();
     });
 
-    it('should format convert-color error response correctly', () => {
+    test('should format convert-color error response correctly', () => {
       const expectedErrorResponse = {
         success: false,
         error: 'Invalid color format or value',
-        hint: expect.stringContaining('Please provide a valid color')
+        hint: 'Please provide a valid color value'
       };
 
       expect(expectedErrorResponse.success).toBe(false);
@@ -153,26 +148,26 @@ describe('MCP Server Tools', () => {
       expect(expectedErrorResponse.hint).toBeDefined();
     });
 
-    it('should format color-info response correctly', () => {
+    test('should format color-info response correctly', () => {
       const expectedInfo = {
         name: 'Color Converter MCP Server',
-        version: expect.any(String),
+        version: '1.0.0',
         description: 'Convert colors between different formats',
-        supportedFormats: expect.objectContaining({
-          hex: expect.any(Object),
-          rgb: expect.any(Object),
-          rgba: expect.any(Object),
-          hsl: expect.any(Object),
-          hsla: expect.any(Object),
-          hsb: expect.any(Object),
-          cmyk: expect.any(Object)
-        }),
-        features: expect.arrayContaining([
-          expect.stringContaining('Auto-detection'),
-          expect.stringContaining('Batch conversion'),
-          expect.stringContaining('CSS named colors')
-        ]),
-        usage: expect.any(Object)
+        supportedFormats: {
+          hex: {},
+          rgb: {},
+          rgba: {},
+          hsl: {},
+          hsla: {},
+          hsb: {},
+          cmyk: {}
+        },
+        features: [
+          'Auto-detection',
+          'Batch conversion',
+          'CSS named colors'
+        ],
+        usage: {}
       };
 
       // Verify the structure
@@ -183,7 +178,7 @@ describe('MCP Server Tools', () => {
   });
 
   describe('Integration with ColorConverter', () => {
-    it('should handle all supported input formats', () => {
+    test('should handle all supported input formats', () => {
       const testCases = [
         { input: '#FF0000', expectedFormat: 'hex' },
         { input: 'rgb(255, 0, 0)', expectedFormat: 'rgb' },
@@ -206,7 +201,7 @@ describe('MCP Server Tools', () => {
       });
     });
 
-    it('should handle edge cases', () => {
+    test('should handle edge cases', () => {
       // Empty input
       expect(() => ColorConverter.convert('')).toThrow();
 
