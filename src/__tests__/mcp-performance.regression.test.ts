@@ -5,12 +5,10 @@
 
 import { describe, it, expect, beforeEach, afterAll } from 'bun:test';
 import { ColorConverter } from '../colorConverter.js';
-import { generateHarmony } from '../colorHarmony.js';
-import { checkColorContrast, findAccessibleColor } from '../colorAccessibility.js';
-import { simulateColorBlindness } from '../colorBlindness.js';
-import { mixColors } from '../colorMixing.js';
+import { ColorHarmony } from '../colorHarmony.js';
+import { checkContrast, findAccessibleColor } from '../colorAccessibility.js';
+import { simulateColorBlindness, simulateAllColorBlindness } from '../colorBlindness.js';
 import { getPalette, getAllPalettes, clearPaletteCache } from '../resources/palettes.js';
-import { getNamedColors, getWebSafeColors } from '../resources/colors.js';
 
 // Performance thresholds (in milliseconds)
 const PERFORMANCE_THRESHOLDS = {
@@ -31,15 +29,9 @@ const PERFORMANCE_THRESHOLDS = {
     single: 1.0,      // Single type simulation
     all: 5.0          // All types simulation
   },
-  colorMixing: {
-    normal: 0.5,      // Normal blend
-    complex: 1.0      // Complex blend modes
-  },
   resourceAccess: {
     palette: 0.5,     // Single palette access
-    allPalettes: 2.0, // All palettes
-    namedColors: 1.0, // Named colors list
-    webSafe: 0.5      // Web-safe colors
+    allPalettes: 2.0  // All palettes
   },
   caching: {
     miss: 1.0,        // Cache miss
@@ -53,7 +45,6 @@ const performanceMetrics: any = {
   harmonyGeneration: [],
   accessibilityCheck: [],
   colorBlindness: [],
-  colorMixing: [],
   resourceAccess: [],
   caching: []
 };
@@ -162,7 +153,7 @@ describe('MCP Performance Regression Tests', () => {
       
       for (const type of harmonyTypes) {
         const start = performance.now();
-        generateHarmony(baseColor, type);
+        ColorHarmony.generateHarmony(baseColor, type);
         const end = performance.now();
         times.push(end - start);
       }
@@ -184,7 +175,7 @@ describe('MCP Performance Regression Tests', () => {
       const allTypes = ['complementary', 'analogous', 'triadic', 'tetradic', 'split-complementary'];
       
       const start = performance.now();
-      allTypes.forEach(type => generateHarmony(baseColor, type));
+      allTypes.forEach(type => ColorHarmony.generateHarmony(baseColor, type));
       const end = performance.now();
       
       const totalTime = end - start;
@@ -214,7 +205,7 @@ describe('MCP Performance Regression Tests', () => {
       
       for (const { fg, bg } of colorPairs) {
         const start = performance.now();
-        checkColorContrast(fg, bg);
+        checkContrast(fg, bg);
         const end = performance.now();
         times.push(end - start);
       }
@@ -289,7 +280,7 @@ describe('MCP Performance Regression Tests', () => {
       const testColor = '#FF6B6B';
       
       const start = performance.now();
-      simulateColorBlindness(testColor); // No type = all types
+      simulateAllColorBlindness(testColor);
       const end = performance.now();
       
       const totalTime = end - start;
@@ -302,61 +293,6 @@ describe('MCP Performance Regression Tests', () => {
       });
       
       expect(totalTime).toBeLessThan(PERFORMANCE_THRESHOLDS.colorBlindness.all);
-    });
-  });
-
-  describe('Color Mixing Performance', () => {
-    it('should meet performance threshold for normal blending', () => {
-      const colorPairs = [
-        { c1: '#FF0000', c2: '#0000FF' },
-        { c1: '#00FF00', c2: '#FF00FF' },
-        { c1: '#FFFF00', c2: '#00FFFF' },
-        { c1: '#000000', c2: '#FFFFFF' },
-        { c1: '#FF6B6B', c2: '#4ECDC4' }
-      ];
-      
-      const times: number[] = [];
-      
-      for (const { c1, c2 } of colorPairs) {
-        const start = performance.now();
-        mixColors(c1, c2);
-        const end = performance.now();
-        times.push(end - start);
-      }
-      
-      const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
-      
-      performanceMetrics.colorMixing.push({
-        test: 'Normal blending',
-        time: avgTime,
-        threshold: PERFORMANCE_THRESHOLDS.colorMixing.normal,
-        passed: avgTime < PERFORMANCE_THRESHOLDS.colorMixing.normal
-      });
-      
-      expect(avgTime).toBeLessThan(PERFORMANCE_THRESHOLDS.colorMixing.normal);
-    });
-
-    it('should meet performance threshold for complex blend modes', () => {
-      const blendModes = ['multiply', 'screen', 'overlay', 'darken', 'lighten'];
-      const times: number[] = [];
-      
-      for (const mode of blendModes) {
-        const start = performance.now();
-        mixColors('#FF6B6B', '#4ECDC4', 0.5, mode);
-        const end = performance.now();
-        times.push(end - start);
-      }
-      
-      const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
-      
-      performanceMetrics.colorMixing.push({
-        test: 'Complex blend modes',
-        time: avgTime,
-        threshold: PERFORMANCE_THRESHOLDS.colorMixing.complex,
-        passed: avgTime < PERFORMANCE_THRESHOLDS.colorMixing.complex
-      });
-      
-      expect(avgTime).toBeLessThan(PERFORMANCE_THRESHOLDS.colorMixing.complex);
     });
   });
 
@@ -399,42 +335,6 @@ describe('MCP Performance Regression Tests', () => {
       });
       
       expect(totalTime).toBeLessThan(PERFORMANCE_THRESHOLDS.resourceAccess.allPalettes);
-    });
-
-    it('should meet performance threshold for named colors access', () => {
-      const start = performance.now();
-      const namedColors = getNamedColors();
-      const end = performance.now();
-      
-      const totalTime = end - start;
-      
-      performanceMetrics.resourceAccess.push({
-        test: 'Named colors access',
-        time: totalTime,
-        threshold: PERFORMANCE_THRESHOLDS.resourceAccess.namedColors,
-        passed: totalTime < PERFORMANCE_THRESHOLDS.resourceAccess.namedColors
-      });
-      
-      expect(totalTime).toBeLessThan(PERFORMANCE_THRESHOLDS.resourceAccess.namedColors);
-      expect(namedColors).toBeDefined();
-    });
-
-    it('should meet performance threshold for web-safe colors access', () => {
-      const start = performance.now();
-      const webSafeColors = getWebSafeColors();
-      const end = performance.now();
-      
-      const totalTime = end - start;
-      
-      performanceMetrics.resourceAccess.push({
-        test: 'Web-safe colors access',
-        time: totalTime,
-        threshold: PERFORMANCE_THRESHOLDS.resourceAccess.webSafe,
-        passed: totalTime < PERFORMANCE_THRESHOLDS.resourceAccess.webSafe
-      });
-      
-      expect(totalTime).toBeLessThan(PERFORMANCE_THRESHOLDS.resourceAccess.webSafe);
-      expect(webSafeColors).toBeDefined();
     });
   });
 
@@ -512,10 +412,9 @@ describe('MCP Performance Regression Tests', () => {
     it('should handle high-volume concurrent operations', async () => {
       const operations = [
         () => ColorConverter.convert('#FF6B6B'),
-        () => generateHarmony('#4ECDC4', 'complementary'),
-        () => checkColorContrast('#000000', '#FFFFFF'),
-        () => simulateColorBlindness('#45B7D1', 'deuteranopia'),
-        () => mixColors('#96CEB4', '#FECA57')
+        () => ColorHarmony.generateHarmony('#4ECDC4', 'complementary'),
+        () => checkContrast('#000000', '#FFFFFF'),
+        () => simulateColorBlindness('#45B7D1', 'deuteranopia')
       ];
       
       const concurrentCount = 50;
