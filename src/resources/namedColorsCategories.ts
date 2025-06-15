@@ -14,7 +14,7 @@ export interface ColorCategory {
 function getColorEntries(colorNames: string[]): { name: string; hex: string }[] {
   return colorNames.map(name => ({
     name,
-    hex: NAMED_COLORS[name] || '#000000'
+    hex: NAMED_COLORS[name] ?? '#000000'
   })).filter(c => c.hex !== '#000000');
 }
 

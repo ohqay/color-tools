@@ -51,7 +51,7 @@ function getHarmonyDescription(harmonyType: string): string {
     'split-complementary': 'Base color plus two colors adjacent to its complement, offering contrast with more nuance',
     'double-complementary': 'Two complementary color pairs forming a rectangle on the color wheel, providing rich color schemes',
   };
-  return descriptions[harmonyType] || '';
+  return descriptions[harmonyType] ?? '';
 }
 
 describe('Color Harmony MCP Integration', () => {

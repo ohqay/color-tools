@@ -61,7 +61,7 @@ describe('MCP Performance Regression Tests', () => {
     console.log('\n=== MCP PERFORMANCE REGRESSION REPORT ===\n');
     
     for (const [category, metrics] of Object.entries(performanceMetrics)) {
-      if (metrics.length === 0) continue;
+      if (metrics.length === 0) {continue;}
       
       console.log(`${category}:`);
       metrics.forEach((metric: any) => {

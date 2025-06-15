@@ -3,7 +3,7 @@
  * Comprehensive performance testing and benchmarking for MCP server operations
  */
 
-import { describe, it, expect, beforeEach, afterAll, mock } from 'bun:test';
+import { describe, it, expect, afterAll, mock } from 'bun:test';
 
 // Mock the file system module to avoid reading package.json
 mock.module('fs', () => ({
@@ -113,7 +113,7 @@ function calculateStats(times: number[]): Omit<BenchmarkResult, 'operation' | 's
 async function runBenchmark(
   name: string,
   operation: () => Promise<any>,
-  samples: number = 100
+  samples = 100
 ): Promise<BenchmarkResult> {
   const times: number[] = [];
   

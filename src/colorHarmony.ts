@@ -62,7 +62,7 @@ export class ColorHarmony {
       }
       return ColorConverter.rgbToHSL(rgb);
     } catch (error) {
-      if (error instanceof ColorError) throw error;
+      if (error instanceof ColorError) {throw error;}
       throw new HarmonyError(
         `Failed to convert color to HSL: ${error instanceof Error ? error.message : 'Unknown error'}`,
         { operation: 'toHSL', input }
@@ -343,9 +343,9 @@ export class ColorHarmony {
       for (const type of harmonyTypes) {
         try {
           results[type] = this.generateHarmony(baseColor, type, outputFormat, options);
-        } catch (error) {
-          // Log individual harmony errors but continue with others
-          console.error(`Failed to generate ${type} harmony:`, error);
+        } catch {
+          // Skip individual harmony errors but continue with others
+          // Error handling could be logged here if needed
           results[type] = {
             type,
             baseColor,

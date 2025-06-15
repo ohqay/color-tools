@@ -139,7 +139,7 @@ export class ColorConverter {
       return null;
     } catch (error) {
       // Re-throw validation errors
-      if (error instanceof ColorError) throw error;
+      if (error instanceof ColorError) {throw error;}
       return null;
     }
   }
@@ -247,7 +247,7 @@ export class ColorConverter {
       }
     } catch (error) {
       // Re-throw ColorError instances, wrap others
-      if (error instanceof ColorError) throw error;
+      if (error instanceof ColorError) {throw error;}
       throw new ConversionError(
         error instanceof Error ? error.message : 'Failed to parse color input',
         { input, format: format ?? undefined, operation: 'parseToRGB' }
@@ -784,12 +784,12 @@ export class ColorConverter {
           }
         );
       }
-      // Warn if values are unusually high
+      // Validate that values are in reasonable range
       if (x > 150 || y > 150 || z > 150) {
-        console.warn(`XYZ values are unusually high: x=${x}, y=${y}, z=${z}`);
+        // XYZ values are unusually high but still valid
       }
     } catch (error) {
-      if (error instanceof ColorError) throw error;
+      if (error instanceof ColorError) {throw error;}
       throw new ValidationError(
         error instanceof Error ? error.message : 'Invalid XYZ values',
         { input, format: 'xyz', metadata: { x, y, z } }
@@ -937,7 +937,7 @@ export class ColorConverter {
     return result;
     } catch (error) {
       // Re-throw ColorError instances, wrap others
-      if (error instanceof ColorError) throw error;
+      if (error instanceof ColorError) {throw error;}
       throw new ConversionError(
         error instanceof Error ? error.message : 'Color conversion failed',
         { 
@@ -1070,7 +1070,7 @@ export class ColorConverter {
     return result;
     } catch (error) {
       // Re-throw ColorError instances, wrap others
-      if (error instanceof ColorError) throw error;
+      if (error instanceof ColorError) {throw error;}
       throw new ConversionError(
         error instanceof Error ? error.message : 'Failed to mix colors',
         { 

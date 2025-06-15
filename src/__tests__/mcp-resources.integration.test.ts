@@ -3,7 +3,7 @@
  * Comprehensive testing of MCP resource access, caching, and data integrity
  */
 
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { describe, it, expect, mock } from 'bun:test';
 
 // Mock the file system module to avoid reading package.json
 mock.module('fs', () => ({
@@ -21,7 +21,6 @@ mock.module('path', () => ({
 }));
 
 // Create a mock server that captures handler functions
-let mockListToolsHandler: () => any;
 let mockCallToolHandler: (request: any) => any;
 let mockListResourcesHandler: () => any;
 let mockReadResourceHandler: (request: any) => any;
@@ -29,7 +28,7 @@ let mockReadResourceHandler: (request: any) => any;
 const mockSetRequestHandler = mock((schema: any, handler: (...args: any[]) => any) => {
   const schemaName = schema?.name ?? schema;
   if (schemaName?.includes?.('ListTools') || schema === 'list-tools') {
-    mockListToolsHandler = handler;
+    // List tools handler not used in these tests
   } else if (schemaName?.includes?.('CallTool') || schema === 'call-tool') {
     mockCallToolHandler = handler;
   } else if (schemaName?.includes?.('ListResources') || schema === 'list-resources') {
@@ -440,7 +439,7 @@ describe('MCP Resources Integration Tests', () => {
             }
           }
         }
-        if (found) break;
+        if (found) {break;}
       }
       
       expect(found).toBe(true);

@@ -278,7 +278,7 @@ export class ErrorHandler {
     let criticalErrors = 0;
 
     for (const error of this.errorLog) {
-      errorsByCode[error.code] = (errorsByCode[error.code] || 0) + 1;
+      errorsByCode[error.code] = (errorsByCode[error.code] ?? 0) + 1;
       
       if (error.recoverable) {
         recoverableErrors++;

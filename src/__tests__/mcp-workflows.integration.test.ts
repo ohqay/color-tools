@@ -3,7 +3,7 @@
  * Tests real-world MCP usage scenarios and complex workflows
  */
 
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { describe, it, expect, mock } from 'bun:test';
 
 // Mock the file system module to avoid reading package.json
 mock.module('fs', () => ({
@@ -21,19 +21,17 @@ mock.module('path', () => ({
 }));
 
 // Create a mock server that captures handler functions
-let mockListToolsHandler: () => any;
 let mockCallToolHandler: (request: any) => any;
-let mockListResourcesHandler: () => any;
 let mockReadResourceHandler: (request: any) => any;
 
 const mockSetRequestHandler = mock((schema: any, handler: (...args: any[]) => any) => {
   const schemaName = schema?.name ?? schema;
   if (schemaName?.includes?.('ListTools') || schema === 'list-tools') {
-    mockListToolsHandler = handler;
+    // List tools handler not used in these tests
   } else if (schemaName?.includes?.('CallTool') || schema === 'call-tool') {
     mockCallToolHandler = handler;
   } else if (schemaName?.includes?.('ListResources') || schema === 'list-resources') {
-    mockListResourcesHandler = handler;
+    // List resources handler not used in these tests
   } else if (schemaName?.includes?.('ReadResource') || schema === 'read-resource') {
     mockReadResourceHandler = handler;
   }
@@ -223,7 +221,7 @@ describe('MCP Real-World Workflows Integration', () => {
         
         const colorData = JSON.parse(colorResult.content[0].text);
         const hsl = colorData.rawValues.hsl;
-        const lab = colorData.rawValues.lab;
+        // const _lab = colorData.rawValues.lab; // Lab values available but not used in this transformation
         
         // Apply dark mode transformation rules
         let darkColor: string;
@@ -269,7 +267,7 @@ describe('MCP Real-World Workflows Integration', () => {
         
         // Verify accessibility of dark theme colors
         if (key.includes('text') || key === 'primary') {
-          const bgColor = key === 'primaryText' ? darkTheme.primary || '#1976D2' : darkTheme.background || '#121212';
+          const bgColor = key === 'primaryText' ? darkTheme.primary ?? '#1976D2' : darkTheme.background ?? '#121212';
           
           const contrastCheck = await mockCallToolHandler({
             params: {
@@ -815,7 +813,7 @@ describe('MCP Real-World Workflows Integration', () => {
       let successCount = 0;
       for (const result of results) {
         const response = JSON.parse(result.content[0].text);
-        if (response.success) successCount++;
+        if (response.success) {successCount++;}
       }
       
       // High success rate expected

@@ -92,15 +92,13 @@ export class PerformanceMonitor {
     const operationBreakdown: Record<string, { count: number; totalTime: number; averageTime: number }> = {};
     
     for (const metric of this.metrics) {
-      if (!operationBreakdown[metric.operation]) {
-        operationBreakdown[metric.operation] = {
-          count: 0,
-          totalTime: 0,
-          averageTime: 0
-        };
-      }
+      operationBreakdown[metric.operation] ??= {
+        count: 0,
+        totalTime: 0,
+        averageTime: 0
+      };
       
-      const breakdown = operationBreakdown[metric.operation] as { count: number; totalTime: number; averageTime: number };
+      const breakdown = operationBreakdown[metric.operation]!;
       breakdown.count++;
       breakdown.totalTime += metric.duration;
       breakdown.averageTime = breakdown.totalTime / breakdown.count;

@@ -1,4 +1,4 @@
-import { describe, it, expect, mock, spyOn } from 'bun:test';
+import { describe, it, expect, mock } from 'bun:test';
 import { findAccessibleColor } from '../colorAccessibility.js';
 import { findColorBlindSafeAlternative, generateColorBlindSafePalette } from '../colorBlindness.js';
 import { ColorConverter } from '../colorConverter.js';

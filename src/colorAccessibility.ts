@@ -143,7 +143,7 @@ export function checkContrast(foreground: string | RGB, background: string | RGB
 
   return result;
   } catch (error) {
-    if (error instanceof ColorError) throw error;
+    if (error instanceof ColorError) {throw error;}
     throw new AccessibilityError(
       `Contrast calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       { 
@@ -292,7 +292,7 @@ export function findAccessibleColor(
 
   return null;
   } catch (error) {
-    if (error instanceof ColorError) throw error;
+    if (error instanceof ColorError) {throw error;}
     throw new AccessibilityError(
       `Failed to find accessible color: ${error instanceof Error ? error.message : 'Unknown error'}`,
       { 
@@ -326,7 +326,7 @@ export function getContrastReport(color: string | RGB): {
       gray: checkContrast(color, gray)
     };
   } catch (error) {
-    if (error instanceof ColorError) throw error;
+    if (error instanceof ColorError) {throw error;}
     throw new AccessibilityError(
       `Failed to generate contrast report: ${error instanceof Error ? error.message : 'Unknown error'}`,
       { 
@@ -413,7 +413,7 @@ export function suggestAccessiblePairs(baseColor: string | RGB, count = 5): {
     .sort((a, b) => b.contrast - a.contrast)
     .slice(0, count);
   } catch (error) {
-    if (error instanceof ColorError) throw error;
+    if (error instanceof ColorError) {throw error;}
     throw new AccessibilityError(
       `Failed to suggest accessible pairs: ${error instanceof Error ? error.message : 'Unknown error'}`,
       { 

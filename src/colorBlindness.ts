@@ -424,7 +424,7 @@ export function generateColorBlindSafePalette(
 
     return palette;
   } catch (error) {
-    if (error instanceof ColorError) throw error;
+    if (error instanceof ColorError) {throw error;}
     throw new ConversionError(
       `Failed to generate color blind safe palette: ${error instanceof Error ? error.message : 'Unknown error'}`,
       { 

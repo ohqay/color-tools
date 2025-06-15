@@ -9,7 +9,7 @@
 
 import { ColorConverter } from '../src/colorConverter.js';
 import { ColorHarmony } from '../src/colorHarmony.js';
-import { checkContrast, findAccessibleColor } from '../src/colorAccessibility.js';
+import { checkContrast } from '../src/colorAccessibility.js';
 import { simulateColorBlindness } from '../src/colorBlindness.js';
 import { 
   ColorError, 
@@ -19,10 +19,7 @@ import {
   safeExecuteAsync,
   ValidationError,
   ConversionError,
-  FormatError,
-  RangeError as ColorRangeError,
-  AccessibilityError,
-  HarmonyError
+  FormatError
 } from '../src/core/errors/ColorError.js';
 
 // Example 1: Basic error handling with ColorConverter
@@ -30,6 +27,7 @@ console.log('=== Example 1: Basic Color Conversion Error Handling ===');
 try {
   // This will throw a validation error
   const result = ColorConverter.convert('', 'hex', ['rgb']);
+  console.log('Unexpected success:', result);
 } catch (error) {
   if (error instanceof ValidationError) {
     console.log('Validation Error:', error.message);
@@ -42,6 +40,7 @@ try {
 console.log('\n=== Example 2: Invalid Color Format ===');
 try {
   const result = ColorConverter.convert('not-a-color', undefined, ['rgb']);
+  console.log('Unexpected success:', result);
 } catch (error) {
   if (error instanceof FormatError || error instanceof ConversionError) {
     console.log('Format/Conversion Error:', error.message);
@@ -55,6 +54,7 @@ console.log('\n=== Example 3: Range Validation ===');
 try {
   // RGB values out of range
   const result = ColorConverter.parseRGBString('rgb(300, -10, 256)');
+  console.log('Unexpected success:', result);
 } catch (error) {
   if (error instanceof ValidationError) {
     console.log('Range Error:', error.message);
@@ -76,6 +76,7 @@ console.log('\n=== Example 5: Harmony Generation Errors ===');
 try {
   // Invalid harmony type
   const harmony = ColorHarmony.generateHarmony('#FF0000', 'invalid-harmony' as any);
+  console.log('Unexpected success:', harmony);
 } catch (error) {
   if (error instanceof ValidationError) {
     console.log('Harmony Error:', error.message);
@@ -94,7 +95,7 @@ async function accessibilityExample() {
     );
     console.log('Contrast check with fallback:', result);
   } catch (error) {
-    console.log('Should not reach here with safeExecuteAsync');
+    console.log('Should not reach here with safeExecuteAsync', error);
   }
 }
 
@@ -103,6 +104,7 @@ console.log('\n=== Example 7: Color Blindness Simulation ===');
 try {
   // Invalid color blindness type
   const simulated = simulateColorBlindness('#FF0000', 'invalid-type' as any);
+  console.log('Unexpected success:', simulated);
 } catch (error) {
   if (error instanceof ValidationError) {
     console.log('Simulation Error:', error.message);
@@ -118,6 +120,9 @@ console.log('\n=== Example 8: Error Handler Statistics ===');
     ColorConverter.convert(color);
   } catch (error) {
     // Errors are automatically logged by error handler
+    if (error instanceof Error) {
+      console.log(`Processing error for ${color}: ${error.message}`);
+    }
   }
 });
 

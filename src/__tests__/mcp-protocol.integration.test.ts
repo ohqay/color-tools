@@ -3,7 +3,7 @@
  * Tests complete MCP protocol compliance and client-server interactions
  */
 
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { describe, it, expect, mock } from 'bun:test';
 
 // Mock the file system module to avoid reading package.json
 mock.module('fs', () => ({
@@ -139,7 +139,7 @@ describe('MCP Protocol Integration Tests', () => {
         expect(tool).toBeDefined();
         
         // Check parameter types and constraints
-        for (const [param, schema] of Object.entries(tool.inputSchema.properties)) {
+        for (const schema of Object.values(tool.inputSchema.properties)) {
           expect(schema).toHaveProperty('type');
           if (schema.type === 'string' && schema.enum) {
             expect(schema.enum).toBeInstanceOf(Array);
@@ -257,7 +257,7 @@ describe('MCP Protocol Integration Tests', () => {
   describe('Batch Operations Support', () => {
     it('should handle multiple concurrent tool calls efficiently', async () => {
       const batchSize = 20;
-      const colors = Array.from({ length: batchSize }, (_, i) => 
+      const colors = Array.from({ length: batchSize }, () => 
         `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`
       );
       
@@ -301,7 +301,7 @@ describe('MCP Protocol Integration Tests', () => {
       
       const results = await Promise.all(promises);
       
-      results.forEach((result, index) => {
+      results.forEach((result) => {
         const response = JSON.parse(result.content[0].text);
         expect(response.success).toBe(true);
       });
@@ -340,6 +340,7 @@ describe('MCP Protocol Integration Tests', () => {
         params: { uri: 'palette://material-design' }
       });
       const time1 = performance.now() - start1;
+      console.log('First access time:', time1);
       
       // Second access (should be cached)
       const start2 = performance.now();
@@ -347,6 +348,7 @@ describe('MCP Protocol Integration Tests', () => {
         params: { uri: 'palette://material-design' }
       });
       const time2 = performance.now() - start2;
+      console.log('Second access time:', time2);
       
       // Content should be identical
       expect(result1.contents[0].text).toBe(result2.contents[0].text);

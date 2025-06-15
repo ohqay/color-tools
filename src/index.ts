@@ -19,7 +19,8 @@ import {
   ColorErrorCode,
   errorHandler,
   safeExecute,
-  safeExecuteAsync 
+  safeExecuteAsync,
+  validateColorInput as validateColor
 } from './core/errors/ColorError.js';
 
 // Type definitions for better type safety
@@ -100,7 +101,7 @@ const createErrorResponse = (error: unknown, hint: string) => {
           error: error.message,
           errorCode: error.code,
           context: error.context,
-          hint: error.context.suggestions?.join(' ') || hint,
+          hint: error.context.suggestions?.join(' ') ?? hint,
           recoverable: error.recoverable
         }),
       }],
@@ -127,8 +128,7 @@ const createSuccessResponse = (data: unknown) => ({
   }],
 });
 
-// Import validation helper from error module
-import { validateColorInput as validateColor } from './core/errors/ColorError.js';
+// Validation helper is imported above
 
 // Wrapper for MCP-specific validation
 const validateColorInput = (color: string | undefined, fieldName: string): void => {
@@ -441,10 +441,10 @@ const handleConvertcolor = async (args: unknown) => {
       return ColorConverter.convert(input, from, to);
     } catch (error) {
       // Re-throw ColorError instances to preserve context
-      if (error instanceof ColorError) throw error;
+      if (error instanceof ColorError) {throw error;}
       throw ColorErrorFactory.conversionFailed(
-        from || 'auto-detected',
-        to?.join(', ') || 'all formats',
+        from ?? 'auto-detected',
+        to?.join(', ') ?? 'all formats',
         error instanceof Error ? error.message : 'Unknown error'
       );
     }
@@ -682,7 +682,7 @@ const handleFindAccessibleColor = async (args: unknown) => {
     async () => suggestFn(targetColor, 3),
     [],
     { operation: 'suggestAccessiblePairs', input: targetColor }
-  ) || [];
+  ) ?? [];
   
   const response = {
     success: true,
@@ -793,7 +793,7 @@ const handleConvertTailwindColor = async (args: unknown) => {
       if (!colorName) {
         throw new Error('Invalid Tailwind color format');
       }
-      const shade = parts[1] || '500'; // Default to 500 if no shade specified
+      const shade = parts[1] ?? '500'; // Default to 500 if no shade specified
       
       const color = getColorFn(colorName);
       if (!color) {
@@ -1242,7 +1242,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       ],
     };
   } catch (error) {
-    if (error instanceof ColorError) throw error;
+    if (error instanceof ColorError) {throw error;}
     throw new ColorError(
       ColorErrorCode.RESOURCE_LOAD_FAILED,
       `Failed to read resource ${uri}: ${error instanceof Error ? error.message : 'Unknown error'}`,
