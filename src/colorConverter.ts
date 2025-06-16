@@ -864,7 +864,8 @@ export class ColorConverter {
     const rgb: RGB = { r: rgbOrRgba.r, g: rgbOrRgba.g, b: rgbOrRgba.b };
     const alpha = hasAlpha ? (rgbOrRgba as RGBA).a : undefined;
 
-    // If no target formats specified, return all. If empty array, return none (just raw values)
+    // If no target formats specified, return all formats for backward compatibility
+    // The intelligent defaults will be implemented at the MCP tool level
     const targetFormats = to ?? ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk', 'lab', 'xyz'];
     const result: ConversionResult = { rawValues: { rgb } };
 
