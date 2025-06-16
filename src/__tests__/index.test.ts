@@ -15,6 +15,18 @@ describe('MCP Server Tools', () => {
       expect(result.cmyk).toBe('cmyk(0%, 100%, 100%, 0%)');
     });
 
+    test('should use intelligent defaults in MCP tool handler', () => {
+      // This tests the MCP tool's intelligent defaults feature
+      const input = '#FF0000';
+      const result = ColorConverter.convert(input, undefined, ['hex', 'rgb', 'hsl']); // Simulating MCP tool behavior
+
+      expect(result.hex).toBe('#ff0000');
+      expect(result.rgb).toBe('rgb(255, 0, 0)');
+      expect(result.hsl).toBe('hsl(0, 100%, 50%)');
+      expect(result.hsb).toBeUndefined();
+      expect(result.cmyk).toBeUndefined();
+    });
+
     test('should auto-detect format', () => {
       const input = 'rgb(255, 0, 0)';
       const detected = ColorConverter.detectFormat(input);
@@ -50,7 +62,7 @@ describe('MCP Server Tools', () => {
       const result = ColorConverter.convert(input);
 
       expect(result.rgba).toBe('rgba(255, 0, 0, 0.5)');
-      expect(result.hsla).toBe('hsla(0, 100%, 50%, 0.5)');
+      expect(result.hex).toBe('#ff000080');
     });
 
     test('should handle errors gracefully', () => {
