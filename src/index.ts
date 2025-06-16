@@ -93,6 +93,15 @@ const createErrorResponse = (error: unknown, hint: string) => {
   // Handle ColorError instances specially
   if (error instanceof ColorError) {
     errorHandler.handle(error);
+    
+    // Format suggestions properly with bullet points and line breaks
+    let formattedHint = hint;
+    if (error.context.suggestions && error.context.suggestions.length > 0) {
+      formattedHint = error.context.suggestions.length === 1 
+        ? (error.context.suggestions[0] ?? hint)
+        : `Try one of these options:\n${error.context.suggestions.map(s => `• ${s}`).join('\n')}`;
+    }
+    
     return {
       content: [{
         type: 'text' as const,
@@ -101,7 +110,8 @@ const createErrorResponse = (error: unknown, hint: string) => {
           error: error.message,
           errorCode: error.code,
           context: error.context,
-          hint: error.context.suggestions?.join(' ') ?? hint,
+          suggestions: error.context.suggestions ?? [],
+          hint: formattedHint,
           recoverable: error.recoverable
         }),
       }],
@@ -239,7 +249,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 type: 'string',
                 enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk', 'lab', 'xyz'],
               },
-              description: 'Target format(s) to convert to. If not specified, converts to all formats.',
+              description: 'Target format(s) to convert to. If not specified, returns common formats (hex, rgb, hsl).',
             },
           },
           required: ['input'],
@@ -396,7 +406,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             outputFormat: {
               type: 'string',
               enum: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'hsv', 'cmyk', 'lab', 'xyz'],
-              description: 'Output format for the mixed color. If not specified, returns all formats.',
+              description: 'Output format for the mixed color. If not specified, returns common formats (hex, rgb, hsl).',
             },
           },
           required: ['color1', 'color2'],
@@ -436,15 +446,19 @@ const handleConvertcolor = async (args: unknown) => {
   
   validateColorInput(input, 'Input color value');
   
+  // Implement intelligent defaults at the MCP tool level
+  const intelligentDefaults: ColorFormat[] = ['hex', 'rgb', 'hsl'];
+  const targetFormats = to ?? intelligentDefaults;
+  
   const { result, duration } = measureTime(() => {
     try {
-      return ColorConverter.convert(input, from, to);
+      return ColorConverter.convert(input, from, targetFormats);
     } catch (error) {
       // Re-throw ColorError instances to preserve context
       if (error instanceof ColorError) {throw error;}
       throw ColorErrorFactory.conversionFailed(
         from ?? 'auto-detected',
-        to?.join(', ') ?? 'all formats',
+        targetFormats.join(', '),
         error instanceof Error ? error.message : 'Unknown error'
       );
     }
@@ -659,6 +673,13 @@ const handleFindAccessibleColor = async (args: unknown) => {
   validateColorInput(targetColor, 'Target color');
   validateColorInput(backgroundColor, 'Background color');
   
+  // Validate targetContrast if provided
+  if (options?.targetContrast !== undefined) {
+    if (options.targetContrast < 1 || options.targetContrast > 21) {
+      throw ColorErrorFactory.outOfRange(options.targetContrast, 1, 21, 'targetContrast');
+    }
+  }
+  
   const { findAccessibleColor: findFn, suggestAccessiblePairs: suggestFn } = await loadAccessibilityFunctions();
   const result = await safeExecuteAsync(
     async () => findFn(targetColor, backgroundColor, options),
@@ -730,6 +751,11 @@ const handleMixColors = async (args: unknown) => {
   validateColorInput(color1, 'First color');
   validateColorInput(color2, 'Second color');
   
+  // Validate ratio parameter if provided
+  if (ratio !== undefined && (ratio < 0 || ratio > 1)) {
+    throw ColorErrorFactory.outOfRange(ratio, 0, 1, 'ratio');
+  }
+  
   const result = safeExecute(
     () => ColorConverter.mixColors(
       color1,
@@ -758,8 +784,17 @@ const handleMixColors = async (args: unknown) => {
     blendModeDescription: blendModeDescriptions[mode ?? 'normal'],
   };
   
-  // Add specific format or all formats
-  response['result'] = outputFormat ? result[outputFormat] : { ...result };
+  // Add specific format or common formats (consistent with convert-color behavior)
+  if (outputFormat) {
+    response['result'] = result[outputFormat];
+  } else {
+    // Return common formats only (intelligent defaults)
+    response['result'] = {
+      hex: result.hex,
+      rgb: result.rgb,
+      hsl: result.hsl
+    };
+  }
   
   return createSuccessResponse(response);
 };
@@ -972,13 +1007,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   } catch (error) {
     const errorHints: Record<string, string> = {
-      'convert-color': 'Please provide a valid color in one of these formats: #RRGGBB, rgb(r,g,b), rgba(r,g,b,a), hsl(h,s%,l%), hsla(h,s%,l%,a), hsb(h,s%,b%), cmyk(c%,m%,y%,k%), or CSS color names (e.g., "red", "blue")',
-      'generate-harmony': 'Please provide a valid base color and harmony type. Supported harmony types: complementary, analogous, triadic, tetradic, split-complementary, double-complementary',
-      'check-contrast': 'Please provide valid foreground and background colors in any supported format',
-      'simulate-colorblind': 'Please provide a valid color in any supported format',
-      'find-accessible-color': 'Please provide valid target and background colors in any supported format',
-      'mix-colors': 'Please provide two valid colors in any supported format',
-      'convert-tailwind-color': 'Please provide a valid input for the specified operation. For to-hex/get-color: use "blue-500" or "blue". For from-hex: use "#3b82f6" (exact matches only). For find-similar: use any hex color like "#D97757". For search: use color name like "blue". For get-all-shades: use color name like "blue".',
+      'convert-color': 'Provide a valid color in any supported format (hex, RGB, HSL, HSB, CMYK, LAB, XYZ, or CSS named colors)',
+      'generate-harmony': 'Provide a valid base color and harmony type (complementary, analogous, triadic, tetradic, split-complementary, double-complementary)',
+      'check-contrast': 'Provide valid foreground and background colors in any supported format',
+      'simulate-colorblind': 'Provide a valid color in any supported format',
+      'find-accessible-color': 'Provide valid target and background colors in any supported format',
+      'mix-colors': 'Provide two valid colors in any supported format',
+      'convert-tailwind-color': 'Refer to the operation-specific requirements in the tool description',
     };
     
     return createErrorResponse(error, errorHints[name] ?? 'Please check your input parameters');
@@ -1061,9 +1096,9 @@ const colorInfo = {
   },
   usage: {
     example1: {
-      description: 'Convert hex to all formats',
+      description: 'Convert hex to common formats',
       input: { input: '#D4C7BA' },
-      output: 'Returns hex, rgb, hsl, hsb, and cmyk values'
+      output: 'Returns hex, rgb, and hsl values (default behavior)'
     },
     example2: {
       description: 'Convert RGB to specific formats',
@@ -1079,6 +1114,11 @@ const colorInfo = {
       description: 'Generate triadic harmony with RGB output',
       input: { baseColor: '#4ECDC4', harmonyType: 'triadic', outputFormat: 'rgb' },
       output: 'Returns three evenly spaced colors in RGB format'
+    },
+    example5: {
+      description: 'Convert to all available formats',
+      input: { input: '#FF0000', to: ['hex', 'rgb', 'rgba', 'hsl', 'hsla', 'hsb', 'cmyk', 'lab', 'xyz'] },
+      output: 'Returns color in all 9 supported formats'
     }
   }
 };
