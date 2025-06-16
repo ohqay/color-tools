@@ -39,7 +39,7 @@ A Model Context Protocol (MCP) server that enables Claude to work with colors. C
   - Split-complementary (base + two adjacent to complement)
   - Double-complementary (two complementary pairs)
 - Custom angle adjustments for fine-tuning harmonies
-- Comprehensive error handling with detailed validation messages
+- Comprehensive error handling with structured, actionable error messages
 - Includes `color-info` tool for server information and examples
 - Tailwind CSS V4 color conversion and search capabilities
 - MCP Resources for accessing color palettes and data:
@@ -111,7 +111,7 @@ Convert #D4C7BA to RGB format
 ```
 
 ```
-Convert rgb(212, 199, 186) to all formats
+Convert rgb(212, 199, 186) to specific formats: ["hex", "hsl", "cmyk"]
 ```
 
 ```
@@ -162,7 +162,7 @@ Search for red colors in the Tailwind palette
 ### convert-color
 - `input` (required): The color value to convert
 - `from` (optional): Source format - if not specified, will auto-detect
-- `to` (optional): Array of target formats - if not specified, converts to all formats
+- `to` (optional): Array of target formats - if not specified, returns common formats (hex, rgb, hsl)
 
 ### color-info
 No parameters required - returns server information and examples
